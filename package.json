@@ -1,0 +1,37 @@
+{
+  "name": "event-promoter",
+  "version": "1.0.0",
+  "description": "A modern and responsive webpage to help students stay updated on upcoming campus events",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "build": "echo 'No build step required for static files'",
+    "init": "git init && git add . && git commit -m \"Initial commit: Event Promoter webpage\""
+  },
+  "keywords": [
+    "events",
+    "campus",
+    "students",
+    "responsive",
+    "web",
+    "javascript"
+  ],
+  "author": "Student Developer",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "."
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
+}
