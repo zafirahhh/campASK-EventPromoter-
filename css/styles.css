@@ -915,8 +915,25 @@ body {
     transform: none;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
+/* Adjusting mobile back button for better visibility */
+@media (max-width: 480px) {
+    .back-button {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: var(--accent-color);
+        color: var(--white);
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        box-shadow: var(--shadow);
+        z-index: 1001;
+    }
+
+    .back-button:hover {
+        background: #00a693;
+    }
+
     .container {
         max-width: 100%;
         padding: 0 10px;
