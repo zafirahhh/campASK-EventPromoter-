@@ -1,5 +1,5 @@
 // Event data with AI-generated poster concepts
-const eventsData = [
+let eventsData = [
     {
         id: 1,
         title: "Tech Innovation Summit",
@@ -9,7 +9,7 @@ const eventsData = [
         time: "14:00",
         venue: "Tech Hub Auditorium",
         poster: "🚀",
-        attendees: 150,
+        attendees: 200,
         maxAttendees: 200
     },
     {
@@ -45,7 +45,7 @@ const eventsData = [
         time: "10:00",
         venue: "Business Building Room 201",
         poster: "💼",
-        attendees: 75,
+        attendees: 100,
         maxAttendees: 100
     },
     {
@@ -71,6 +71,30 @@ const eventsData = [
         poster: "🏊",
         attendees: 80,
         maxAttendees: 120
+    },
+    {
+        id: 7,
+        title: "Art Exhibition",
+        description: "Explore stunning artworks from talented students and local artists.",
+        category: "social",
+        date: "2025-07-30",
+        time: "10:00",
+        venue: "Art Gallery",
+        poster: "🎨",
+        attendees: 50,
+        maxAttendees: 50 // Fully booked
+    },
+    {
+        id: 8,
+        title: "Coding Bootcamp",
+        description: "Learn coding basics and advanced techniques in this hands-on workshop.",
+        category: "academic",
+        date: "2025-07-31",
+        time: "09:00",
+        venue: "Computer Lab",
+        poster: "💻",
+        attendees: 30,
+        maxAttendees: 30 // 2 spots left
     }
 ];
 
@@ -225,6 +249,7 @@ function createEventCard(event) {
     const formattedTime = formatTime(event.time);
     const spotsLeft = event.maxAttendees - event.attendees;
     const isAlmostFull = spotsLeft <= 20;
+    const isFull = event.attendees >= event.maxAttendees;
 
     const cardElement = document.createElement('div');
     cardElement.className = 'event-card';
@@ -254,17 +279,18 @@ function createEventCard(event) {
                     <i class="fas fa-users"></i>
                     <span>${event.attendees}/${event.maxAttendees} attendees</span>
                     ${isAlmostFull ? '<span style="color: var(--secondary-color); font-weight: 500; margin-left: 0.5rem;">Almost Full!</span>' : ''}
+                    ${isFull ? '<span style="color: red; font-weight: 500; margin-left: 0.5rem;">Event Full</span>' : ''}
                 </div>
             </div>
 
             <div class="event-actions">
-                <button class="btn btn-primary" onclick="openApplicationModal(${event.id})">
+                <button class="btn btn-primary ${isFull ? 'disabled' : ''}" ${isFull ? 'disabled' : ''} onclick="${!isFull ? `openApplicationModal(${event.id})` : ''}">
                     <i class="fas fa-user-plus"></i>
-                    Join Now
+                    ${isFull ? 'Full' : 'Join Now'}
                 </button>
-                <button class="btn btn-secondary" onclick="setReminder(${event.id})">
+                <button class="btn btn-secondary ${isFull ? 'disabled' : ''}" ${isFull ? 'disabled' : ''} onclick="${!isFull ? `setReminder(${event.id})` : ''}">
                     <i class="fas fa-bell"></i>
-                    Set Reminder
+                    ${isFull ? 'Closed' : 'Set Reminder'}
                 </button>
                 <button class="btn btn-outline" onclick="shareEvent(${event.id})">
                     <i class="fas fa-share"></i>
@@ -947,3 +973,71 @@ function showNotification(message) {
         notification.classList.remove('show');
     }, 4000);
 }
+
+// Decrease attendees for all events
+function decreaseAttendeesForAllEvents() {
+    eventsData.forEach(event => {
+        if (event.attendees > 0) {
+            event.attendees -= 10; // Decrease by 10 attendees
+        }
+    });
+    renderEvents();
+}
+
+// Call the function immediately for testing
+window.addEventListener('load', decreaseAttendeesForAllEvents);
+
+// WebSocket connection setup
+const socket = new WebSocket('ws://localhost:8080');
+
+// Listen for WebSocket messages
+socket.addEventListener('message', function(event) {
+    const data = JSON.parse(event.data);
+
+    if (data.type === 'attendeeUpdate') {
+        const updatedEvent = eventsData.find(e => e.id === data.eventId);
+        if (updatedEvent) {
+            updatedEvent.attendees = data.attendees;
+            renderEvents(); // Re-render events to reflect updated attendee counts
+        }
+    }
+});
+
+// Notify server of attendee changes
+function notifyAttendeeChange(eventId, attendees) {
+    const message = {
+        type: 'attendeeUpdate',
+        eventId: eventId,
+        attendees: attendees
+    };
+    socket.send(JSON.stringify(message));
+}
+
+// Update attendee count and notify server
+function updateAttendeeCount(eventId, increment = true) {
+    const event = eventsData.find(e => e.id === eventId);
+    if (event) {
+        event.attendees += increment ? 1 : -1;
+        notifyAttendeeChange(eventId, event.attendees);
+        renderEvents();
+    }
+}
+
+// Ensure "Coding Bootcamp" is fully booked
+const fullyBookedEventIds = [7]; // Only event ID 7 (Coding Bootcamp) will be fully booked
+fullyBookedEventIds.forEach(eventId => {
+    const event = eventsData.find(e => e.id === eventId);
+    if (event) {
+        event.attendees = event.maxAttendees; // Set attendees to maxAttendees
+    }
+});
+
+const almostFullEventIds = [1, 4]; // Two other events will be almost full
+almostFullEventIds.forEach(eventId => {
+    const event = eventsData.find(e => e.id === eventId);
+    if (event) {
+        event.attendees = event.maxAttendees - 2; // Set attendees to 2 spots left
+    }
+});
+
+renderEvents(); // Re-render events to reflect changes
