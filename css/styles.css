@@ -919,11 +919,11 @@ body {
 @media (max-width: 480px) {
     .back-button {
         position: absolute;
-        top: 10px;
-        left: 10px;
+        top: 20px;
+        left: 15px;
         background: none;
         color: var(--primary-color);
-        font-size: 1.2rem;
+        font-size: 1rem;
         border: none;
         padding: 0;
         z-index: 1001;
@@ -933,7 +933,7 @@ body {
     }
 
     .back-button i {
-        font-size: 1.5rem;
+        font-size: 1.2rem;
     }
 
     .back-button:hover {
