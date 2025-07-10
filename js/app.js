@@ -790,9 +790,10 @@ function hideTypingIndicator() {
     }
 }
 
+// Updated generateBotResponse to handle general questions more effectively
 function generateBotResponse(userMessage) {
     const message = userMessage.toLowerCase();
-    
+
     // Event-related responses
     if (message.includes('event') || message.includes('upcoming')) {
         const upcomingEvents = eventsData.slice(0, 3);
@@ -807,54 +808,22 @@ function generateBotResponse(userMessage) {
         response += "\nYou can scroll up to see all events and click 'Join Now' to register!";
         return response;
     }
-    
+
     // Registration help
     if (message.includes('register') || message.includes('join') || message.includes('sign up')) {
         return "To register for an event:\n\n1. Find an event you like\n2. Click the 'Join Now' button\n3. Fill out the registration form with your name and email\n4. Add any special notes (optional)\n5. Submit your application\n\nYou'll get a confirmation notification once registered! 🎉";
     }
-    
+
     // Reminder help
     if (message.includes('reminder') || message.includes('calendar') || message.includes('notification')) {
         return "I can help you set reminders! 📲\n\nFor any event, click the 'Set Reminder' button to:\n• Add the event to your calendar (Google Calendar)\n• Enable browser notifications (if you allow them)\n• Get notified 1 hour before the event\n\nThis way you'll never miss an event you're excited about!";
     }
-    
-    // Greeting responses
-    if (message.includes('hi') || message.includes('hello') || message.includes('hey')) {
-        return "Hello there! 👋 Welcome to Event Promoter! I'm here to help you discover amazing campus events and make the most of your student life. What can I help you with today?";
-    }
-    
-    // Thank you responses
-    if (message.includes('thank') || message.includes('thanks')) {
-        return "You're very welcome! 😊 I'm always here to help you stay connected with campus life. Is there anything else you'd like to know about our events?";
-    }
-    
-    // Category-specific help
-    if (message.includes('academic') || message.includes('study') || message.includes('career')) {
-        const academicEvents = eventsData.filter(event => event.category === 'academic');
-        if (academicEvents.length > 0) {
-            return `Great! We have ${academicEvents.length} academic events coming up, including workshops, seminars, and career development sessions. Check out the 'Academic' filter above to see them all! 📚`;
-        }
-    }
-    
-    if (message.includes('social') || message.includes('fun') || message.includes('party')) {
-        const socialEvents = eventsData.filter(event => event.category === 'social');
-        if (socialEvents.length > 0) {
-            return `Awesome! We have ${socialEvents.length} social events where you can meet new people and have fun! Use the 'Social' filter to see all the exciting social gatherings. 🎉`;
-        }
-    }
-    
-    if (message.includes('sport') || message.includes('game') || message.includes('competition')) {
-        const sportsEvents = eventsData.filter(event => event.category === 'sports');
-        if (sportsEvents.length > 0) {
-            return `Perfect! We have ${sportsEvents.length} sports events including games and competitions. Click the 'Sports' filter to see all athletic events. Whether you want to play or cheer, there's something for you! ⚽`;
-        }
-    }
-    
-    // Help and general info
+
+    // General questions
     if (message.includes('help') || message.includes('what can you do')) {
         return "I'm your campus assistant! Here's how I can help:\n\n🎯 Find events that match your interests\n📝 Guide you through registration\n⏰ Help set up reminders\n🎓 Provide campus information\n📱 Answer questions about our platform\n\nJust ask me anything about campus events or student life!";
     }
-    
+
     // Default responses for unrecognized input
     const defaultResponses = [
         "That's interesting! Is there anything specific about campus events I can help you with? 🤔",
@@ -862,7 +831,7 @@ function generateBotResponse(userMessage) {
         "Great question! I'm here to help with anything related to campus events. What would you like to know? 🎓",
         "I'm still learning! For now, I'm best at helping with event information, registration, and reminders. What can I help you with?"
     ];
-    
+
     return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
 }
 
