@@ -866,7 +866,7 @@ function generateBotResponse(userMessage) {
     return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
 }
 
-// Set reminder functionality
+// Updated setReminder functionality to ensure consistent behavior across devices
 function setReminder(eventId) {
     const event = eventsData.find(e => e.id === eventId);
     if (!event) return;
@@ -883,23 +883,8 @@ function setReminder(eventId) {
         endDate: endDate
     });
 
-    // Try to open calendar application or show fallback
-    if (navigator.userAgent.includes('Mobile')) {
-        window.open(calendarUrl, '_blank');
-    } else {
-        // For desktop, simulate local notification permission
-        if ('Notification' in window) {
-            Notification.requestPermission().then(permission => {
-                if (permission === 'granted') {
-                    scheduleNotification(event);
-                } else {
-                    window.open(calendarUrl, '_blank');
-                }
-            });
-        } else {
-            window.open(calendarUrl, '_blank');
-        }
-    }
+    // Open Google Calendar in a new tab for all devices
+    window.open(calendarUrl, '_blank');
 
     showNotification(`Reminder set for ${event.title}!`);
 }
