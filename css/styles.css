@@ -915,23 +915,29 @@ body {
     transform: none;
 }
 
-/* Adjusting mobile back button for better visibility */
+/* Adjusting mobile back button to a small arrow */
 @media (max-width: 480px) {
     .back-button {
         position: absolute;
         top: 10px;
         left: 10px;
-        background: var(--accent-color);
-        color: var(--white);
-        padding: 0.5rem 1rem;
-        border-radius: 8px;
-        font-size: 0.9rem;
-        box-shadow: var(--shadow);
+        background: none;
+        color: var(--primary-color);
+        font-size: 1.2rem;
+        border: none;
+        padding: 0;
         z-index: 1001;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .back-button i {
+        font-size: 1.5rem;
     }
 
     .back-button:hover {
-        background: #00a693;
+        color: var(--accent-color);
     }
 
     .container {
