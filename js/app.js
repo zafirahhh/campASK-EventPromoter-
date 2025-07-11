@@ -9,7 +9,7 @@ let eventsData = [
         time: "14:00",
         venue: "Tech Hub Auditorium",
         poster: "🚀",
-        attendees: 200,
+        attendees: 195,
         maxAttendees: 200
     },
     {
@@ -21,7 +21,7 @@ let eventsData = [
         time: "18:00",
         venue: "Campus Green",
         poster: "🎵",
-        attendees: 300,
+        attendees: 350,
         maxAttendees: 500
     },
     {
@@ -33,7 +33,7 @@ let eventsData = [
         time: "19:30",
         venue: "Sports Complex",
         poster: "🏀",
-        attendees: 400,
+        attendees: 405,
         maxAttendees: 600
     },
     {
@@ -45,7 +45,7 @@ let eventsData = [
         time: "10:00",
         venue: "Business Building Room 201",
         poster: "💼",
-        attendees: 100,
+        attendees: 99,
         maxAttendees: 100
     },
     {
@@ -93,7 +93,7 @@ let eventsData = [
         time: "09:00",
         venue: "Computer Lab",
         poster: "💻",
-        attendees: 30,
+        attendees: 28,
         maxAttendees: 30 // 2 spots left
     }
 ];
@@ -138,19 +138,79 @@ let isChatOpen = false;
 let currentApplicationId = null;
 let userApplications = JSON.parse(localStorage.getItem('userApplications')) || [];
 
+// Ensure localStorage values are applied before rendering
+function initializeAttendeeCounts() {
+    console.log('Applying attendee counts from localStorage...');
+    eventsData.forEach(event => {
+        const saved = localStorage.getItem(`event-${event.id}-attendees`);
+        if (saved !== null) {
+            const savedCount = parseInt(saved);
+            console.log(`Event ID ${event.id}: Loading saved count ${savedCount} (was ${event.attendees})`);
+            event.attendees = savedCount;
+        }
+    });
+    console.log('Attendee counts initialized from localStorage');
+}
+
+// Debugging: Check for overwrites after initialization
+function verifyAttendeeCounts() {
+    console.log('Verifying attendee counts after initialization...');
+    eventsData.forEach(event => {
+        const stored = localStorage.getItem(`event-${event.id}-attendees`);
+        console.log(`Event ID ${event.id}: Current ${event.attendees}, Stored: ${stored}`);
+    });
+}
+
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
-    renderEvents();
+    console.log('Initializing application...');
+
+    // ✅ Only apply saved counts ONCE
+    initializeAttendeeCounts(); // loads saved values from localStorage
+    verifyAttendeeCounts(); // debug verification
+
+    renderEvents();             // render AFTER initializing
     setupEventListeners();
     updateApplicationsBadge();
-    
-    // Initialize chat send button state
-    if (chatSend) {
-        chatSend.disabled = true;
-    }
-    
+
+    // Disable chat send initially
+    if (chatSend) chatSend.disabled = true;
+
     animateOnLoad();
+    console.log('Application initialized successfully.');
 });
+
+// Step 3: Register function to increase count and update localStorage
+function register(eventId) {
+    const event = eventsData.find(e => e.id === eventId);
+    if (!event || event.attendees >= event.maxAttendees) return;
+
+    event.attendees += 1;
+    localStorage.setItem(`event-${event.id}-attendees`, event.attendees);
+    renderEvents();
+}
+
+// Utility function to debounce calls
+function debounce(func, delay) {
+    let timeout;
+    return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), delay);
+    };
+}
+
+// Debounced renderEvents to prevent excessive calls
+const debouncedRenderEvents = debounce(renderEvents, 300);
+
+// Update attendee count and re-render events
+function updateAttendeeCount(eventId, increment = 1) {
+    const event = eventsData.find(e => e.id === eventId);
+    if (!event || event.attendees + increment > event.maxAttendees || event.attendees + increment < 0) return;
+
+    event.attendees += increment;
+    localStorage.setItem(`event-${event.id}-attendees`, event.attendees);
+    debouncedRenderEvents();
+}
 
 // Setup event listeners
 function setupEventListeners() {
@@ -205,7 +265,8 @@ function handleFilter(e) {
     renderEvents();
 }
 
-// Render events based on current filter
+// Ensure attendee counts and statuses are updated correctly in the DOM
+// Debugging: Verify specific event updates
 function renderEvents() {
     const filteredEvents = currentFilter === 'all' 
         ? eventsData 
@@ -248,11 +309,12 @@ function createEventCard(event) {
 
     const formattedTime = formatTime(event.time);
     const spotsLeft = event.maxAttendees - event.attendees;
-    const isAlmostFull = spotsLeft <= 20;
     const isFull = event.attendees >= event.maxAttendees;
+    const isAlmostFull = !isFull && spotsLeft <= 20 && spotsLeft > 0;
 
     const cardElement = document.createElement('div');
     cardElement.className = 'event-card';
+    cardElement.setAttribute('data-id', event.id);
     cardElement.innerHTML = `
         <div class="event-image">
             ${event.poster}
@@ -278,19 +340,19 @@ function createEventCard(event) {
                 <div class="event-detail">
                     <i class="fas fa-users"></i>
                     <span>${event.attendees}/${event.maxAttendees} attendees</span>
-                    ${isAlmostFull ? '<span style="color: var(--secondary-color); font-weight: 500; margin-left: 0.5rem;">Almost Full!</span>' : ''}
-                    ${isFull ? '<span style="color: red; font-weight: 500; margin-left: 0.5rem;">Event Full</span>' : ''}
+                    ${isFull ? '<span style="color: red; font-weight: 600; margin-left: 0.5rem;">• FULLY BOOKED</span>' : 
+                      isAlmostFull ? '<span style="color: var(--secondary-color); font-weight: 500; margin-left: 0.5rem;">• Almost Full!</span>' : ''}
                 </div>
             </div>
 
             <div class="event-actions">
-                <button class="btn btn-primary ${isFull ? 'disabled' : ''}" ${isFull ? 'disabled' : ''} onclick="${!isFull ? `openApplicationModal(${event.id})` : ''}">
+                <button class="btn btn-primary ${isFull ? 'disabled' : ''}" ${isFull ? 'disabled' : ''} ${!isFull ? `onclick="openApplicationModal(${event.id})"` : ''} ${isFull ? 'style="pointer-events: none; cursor: not-allowed;"' : ''}>
                     <i class="fas fa-user-plus"></i>
-                    ${isFull ? 'Full' : 'Join Now'}
+                    ${isFull ? 'Fully Booked' : 'Join Now'}
                 </button>
-                <button class="btn btn-secondary ${isFull ? 'disabled' : ''}" ${isFull ? 'disabled' : ''} onclick="${!isFull ? `setReminder(${event.id})` : ''}">
+                <button class="btn btn-secondary ${isFull ? 'disabled' : ''}" ${isFull ? 'disabled' : ''} ${!isFull ? `onclick="setReminder(${event.id})"` : ''} ${isFull ? 'style="pointer-events: none; cursor: not-allowed;"' : ''}>
                     <i class="fas fa-bell"></i>
-                    ${isFull ? 'Closed' : 'Set Reminder'}
+                    ${isFull ? 'Unavailable' : 'Set Reminder'}
                 </button>
                 <button class="btn btn-outline" onclick="shareEvent(${event.id})">
                     <i class="fas fa-share"></i>
@@ -380,6 +442,9 @@ function submitApplication(data) {
         if (event) {
             event.attendees += 1;
             
+            // Persist updated count
+            localStorage.setItem(`event-${event.id}-attendees`, event.attendees);
+
             // Add to user applications
             const application = {
                 id: Date.now(),
@@ -403,6 +468,11 @@ function submitApplication(data) {
         showNotification(`Successfully registered for ${event.title}!`);
         renderEvents(); // Re-render to update attendee count
         updateApplicationsBadge();
+        
+        // Automatically redirect to applications page to show the new registration
+        setTimeout(() => {
+            showApplications();
+        }, 1000); // Small delay to let user see the success notification
         
         // Reset button
         submitBtn.innerHTML = originalText;
@@ -605,10 +675,12 @@ function deleteApplication(applicationId) {
     if (!application) return;
 
     if (confirm(`Are you sure you want to delete your application for "${application.eventTitle}"? This action cannot be undone.`)) {
-        // Update event attendee count
         const event = eventsData.find(e => e.id === application.eventId);
         if (event && event.attendees > 0) {
             event.attendees -= 1;
+
+            // Update localStorage to reflect the new count
+            localStorage.setItem(`event-${event.id}-attendees`, event.attendees);
         }
 
         // Remove from applications
@@ -621,6 +693,68 @@ function deleteApplication(applicationId) {
         showNotification('Application deleted successfully');
     }
 }
+
+// Update event availability - integrated into renderEvents()
+function updateEventAvailability() {
+    eventsData.forEach(event => {
+        if (event.attendees >= event.maxAttendees) {
+            displayStatus(event.id, "Fully Booked");
+            disableRegisterButton(event.id);
+        } else if (event.maxAttendees - event.attendees === 1) {
+            displayWarning(event.id, "Only 1 spot left!");
+        }
+    });
+}
+
+// Register for an event
+function registerEvent(eventId) {
+    const event = eventsData.find(e => e.id === eventId);
+    if (!event) return;
+
+    if (event.attendees < event.maxAttendees) {
+        event.attendees += 1;
+        if (event.attendees >= event.maxAttendees) {
+            displayStatus(event.id, "Fully Booked");
+            disableRegisterButton(event.id);
+        }
+        renderEvents(); // Re-render events to reflect changes
+    }
+}
+
+// Debugging: Add logs to helper functions
+function displayStatus(id, message) {
+    console.log(`Displaying status for event ID ${id}: ${message}`);
+    const eventCard = document.querySelector(`.event-card[data-id='${id}']`);
+    if (eventCard) {
+        const statusLabel = eventCard.querySelector('.event-status');
+        if (statusLabel) {
+            statusLabel.textContent = message;
+            statusLabel.style.color = "red";
+        }
+    }
+}
+
+function disableRegisterButton(id) {
+    console.log(`Disabling register button for event ID ${id}`);
+    const registerButton = document.querySelector(`.event-card[data-id='${id}'] .btn-primary`);
+    if (registerButton) {
+        registerButton.disabled = true;
+        registerButton.classList.add('disabled');
+    }
+}
+
+function displayWarning(id, message) {
+    console.log(`Displaying warning for event ID ${id}: ${message}`);
+    const eventCard = document.querySelector(`.event-card[data-id='${id}']`);
+    if (eventCard) {
+        const warningBanner = document.createElement('div');
+        warningBanner.className = 'warning-banner';
+        warningBanner.textContent = message;
+        eventCard.insertBefore(warningBanner, eventCard.firstChild);
+    }
+}
+
+// Call updateEventAvailability on page load - REMOVED to prevent conflicts
 
 // Close chat window on outside click
 document.addEventListener('click', function(event) {
@@ -974,70 +1108,43 @@ function showNotification(message) {
     }, 4000);
 }
 
-// Decrease attendees for all events
-function decreaseAttendeesForAllEvents() {
-    eventsData.forEach(event => {
-        if (event.attendees > 0) {
-            event.attendees -= 10; // Decrease by 10 attendees
-        }
-    });
-    renderEvents();
-}
+// Decrease attendees for all events - REMOVED to prevent conflicts
+// function decreaseAttendeesForAllEvents() {
+//     eventsData.forEach(event => {
+//         if (event.attendees > 0) {
+//             event.attendees -= 10; // Decrease by 10 attendees
+//         }
+//     });
+//     renderEvents();
+// }
 
-// Call the function immediately for testing
-window.addEventListener('load', decreaseAttendeesForAllEvents);
+// Call the function immediately for testing - REMOVED
+// window.addEventListener('load', decreaseAttendeesForAllEvents);
 
-// WebSocket connection setup
-const socket = new WebSocket('ws://localhost:8080');
+// WebSocket connection setup - DISABLED for now to prevent conflicts
+// const socket = new WebSocket('ws://localhost:8080');
 
-// Listen for WebSocket messages
-socket.addEventListener('message', function(event) {
-    const data = JSON.parse(event.data);
+// Listen for WebSocket messages - DISABLED
+// socket.addEventListener('message', function(event) {
+//     const data = JSON.parse(event.data);
 
-    if (data.type === 'attendeeUpdate') {
-        const updatedEvent = eventsData.find(e => e.id === data.eventId);
-        if (updatedEvent) {
-            updatedEvent.attendees = data.attendees;
-            renderEvents(); // Re-render events to reflect updated attendee counts
-        }
-    }
-});
+//     if (data.type === 'attendeeUpdate') {
+//         const updatedEvent = eventsData.find(e => e.id === data.eventId);
+//         if (updatedEvent) {
+//             updatedEvent.attendees = data.attendees;
+//             renderEvents(); // Re-render events to reflect updated attendee counts
+//         }
+//     }
+// });
 
-// Notify server of attendee changes
-function notifyAttendeeChange(eventId, attendees) {
-    const message = {
-        type: 'attendeeUpdate',
-        eventId: eventId,
-        attendees: attendees
-    };
-    socket.send(JSON.stringify(message));
-}
+// Handle WebSocket connection errors - DISABLED
+// socket.addEventListener('error', function(error) {
+//     console.error('WebSocket error:', error);
+//     showNotification('Unable to connect to the server. Some features may not work.');
+// });
 
-// Update attendee count and notify server
-function updateAttendeeCount(eventId, increment = true) {
-    const event = eventsData.find(e => e.id === eventId);
-    if (event) {
-        event.attendees += increment ? 1 : -1;
-        notifyAttendeeChange(eventId, event.attendees);
-        renderEvents();
-    }
-}
-
-// Ensure "Coding Bootcamp" is fully booked
-const fullyBookedEventIds = [7]; // Only event ID 7 (Coding Bootcamp) will be fully booked
-fullyBookedEventIds.forEach(eventId => {
-    const event = eventsData.find(e => e.id === eventId);
-    if (event) {
-        event.attendees = event.maxAttendees; // Set attendees to maxAttendees
-    }
-});
-
-const almostFullEventIds = [1, 4]; // Two other events will be almost full
-almostFullEventIds.forEach(eventId => {
-    const event = eventsData.find(e => e.id === eventId);
-    if (event) {
-        event.attendees = event.maxAttendees - 2; // Set attendees to 2 spots left
-    }
-});
-
-renderEvents(); // Re-render events to reflect changes
+// Handle WebSocket connection close - DISABLED
+// socket.addEventListener('close', function() {
+//     console.warn('WebSocket connection closed.');
+//     showNotification('Connection to the server was lost.');
+// });
