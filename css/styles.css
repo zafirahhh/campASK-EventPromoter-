@@ -694,7 +694,7 @@ body {
 }
 
 .chat-header {
-    background: linear-gradient(135deg, var(--primary-color) 0%, #004080 100%);
+    background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%);
     color: var(--white);
     padding: 1rem;
     display: flex;
@@ -703,7 +703,7 @@ body {
     border-radius: var(--border-radius) var(--border-radius) 0 0;
 }
 
-.chat-header-info {
+.chat-profile {
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -720,10 +720,16 @@ body {
     font-size: 1.2rem;
 }
 
-.chat-header-text h4 {
-    margin: 0;
+.chat-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.chat-title {
     font-size: 1rem;
     font-weight: 600;
+    margin: 0;
 }
 
 .chat-status {
@@ -731,21 +737,20 @@ body {
     opacity: 0.9;
     display: flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: 0.5rem;
 }
 
-.chat-status::before {
-    content: '';
+.status-dot {
     width: 8px;
     height: 8px;
-    background: #4CAF50;
+    background: #10b981;
     border-radius: 50%;
-    animation: blink 2s infinite;
+    animation: pulse 2s infinite;
 }
 
-@keyframes blink {
-    0%, 50% { opacity: 1; }
-    51%, 100% { opacity: 0.3; }
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
 }
 
 .chat-close {
@@ -808,7 +813,8 @@ body {
 }
 
 .bot-message .message-avatar {
-    background: var(--accent-color);
+    background: #1e3a8a;
+    color: var(--white);
 }
 
 .user-message .message-avatar {
@@ -821,17 +827,24 @@ body {
     padding: 0.75rem 1rem;
     border-radius: 18px;
     max-width: 80%;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    line-height: 1.4;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    line-height: 1.5;
+    border: 1px solid #e5e7eb;
 }
 
 .user-message .message-content {
     background: var(--primary-color);
     color: var(--white);
+    border: none;
 }
 
 .message-content p {
     margin: 0 0 0.5rem 0;
+    color: #374151;
+}
+
+.user-message .message-content p {
+    color: var(--white);
 }
 
 .message-content p:last-child {
@@ -841,6 +854,15 @@ body {
 .message-content ul {
     margin: 0.5rem 0;
     padding-left: 1.5rem;
+    color: #374151;
+}
+
+.user-message .message-content ul {
+    color: var(--white);
+}
+
+.message-content li {
+    margin-bottom: 0.3rem;
 }
 
 .message-content li {
@@ -861,31 +883,46 @@ body {
 .chat-input-container {
     border-top: 1px solid #eee;
     background: var(--white);
-}
-
-.chat-quick-actions {
     padding: 0.75rem;
     display: flex;
     gap: 0.5rem;
+    align-items: center;
+}
+
+.chat-quick-actions {
+    padding: 1rem;
+    display: flex;
+    gap: 0.5rem;
     flex-wrap: wrap;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #e5e7eb;
+    background: #f9fafb;
 }
 
 .quick-action-btn {
-    background: var(--background-color);
-    border: 1px solid var(--accent-color);
-    color: var(--accent-color);
-    padding: 0.4rem 0.8rem;
+    background: var(--white);
+    border: 1px solid #d1d5db;
+    color: #374151;
+    padding: 0.5rem 1rem;
     border-radius: 20px;
     font-size: 0.8rem;
     cursor: pointer;
     transition: var(--transition);
     white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .quick-action-btn:hover {
-    background: var(--accent-color);
-    color: var(--white);
+    background: #f3f4f6;
+    border-color: #9ca3af;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.quick-action-btn i {
+    font-size: 0.7rem;
 }
 
 .chat-input-wrapper {
@@ -937,6 +974,15 @@ body {
 
 /* Adjusting mobile back button to a small arrow */
 @media (max-width: 480px) {
+    /* Fix the back button positioning on mobile */
+    a[href*="index.html"] {
+        top: 10px !important;
+        left: 10px !important;
+        padding: 8px 12px !important;
+        font-size: 14px !important;
+        z-index: 999 !important;
+    }
+
     .back-button {
         position: absolute;
         top: 20px;
@@ -967,6 +1013,7 @@ body {
 
     .header {
         padding: 1rem 0;
+        padding-top: 3rem; /* Add extra padding to accommodate back button */
     }
 
     .logo {
@@ -1062,6 +1109,18 @@ body {
 }
 
 @media (max-width: 768px) and (min-width: 481px) {
+    /* Tablet adjustments for back button */
+    a[href*="index.html"] {
+        top: 15px !important;
+        left: 15px !important;
+        padding: 9px 13px !important;
+        font-size: 15px !important;
+    }
+    
+    .header {
+        padding-top: 2.5rem;
+    }
+
     .chat-window {
         width: 320px;
         height: 450px;

@@ -164,32 +164,36 @@
         </div>
     </div>
 
-    <!-- Floating Chat Bubble -->
+    <!-- Chat Bubble -->
     <div class="chat-bubble" id="chatBubble">
-        <div class="chat-bubble-icon">
-            💬
-        </div>
-        <div class="chat-bubble-tooltip">Need help? Chat with us!</div>
+        <i class="fas fa-comments chat-bubble-icon"></i>
+        <div class="chat-bubble-tooltip">Chat with us!</div>
     </div>
 
     <!-- Chat Window -->
     <div class="chat-window" id="chatWindow">
         <div class="chat-header">
-            <div class="chat-header-info">
-                <div class="chat-avatar">🤖</div>
-                <div class="chat-header-text">
-                    <h4>Campus Assistant</h4>
-                    <span class="chat-status">Online</span>
+            <div class="chat-profile">
+                <div class="chat-avatar">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="chat-info">
+                    <div class="chat-title">Campus Assistant</div>
+                    <div class="chat-status">
+                        <div class="status-dot"></div>
+                        Online
+                    </div>
                 </div>
             </div>
             <button class="chat-close" id="chatClose">
                 <i class="fas fa-times"></i>
             </button>
         </div>
-        
         <div class="chat-messages" id="chatMessages">
             <div class="chat-message bot-message">
-                <div class="message-avatar">🤖</div>
+                <div class="message-avatar">
+                    <i class="fas fa-robot"></i>
+                </div>
                 <div class="message-content">
                     <p>Hi there! 👋 I'm your campus assistant. I can help you with:</p>
                     <ul>
@@ -198,23 +202,28 @@
                         <li>Setting up reminders</li>
                         <li>Campus information and FAQ</li>
                     </ul>
-                    <p>What would you like to know?</p>
                 </div>
             </div>
         </div>
-        
+        <div class="chat-quick-actions">
+            <button class="quick-action-btn" data-message="What events are happening this week?">
+                <i class="fas fa-calendar"></i>
+                Upcoming Events
+            </button>
+            <button class="quick-action-btn" data-message="How do I register for an event?">
+                <i class="fas fa-question-circle"></i>
+                How to Register
+            </button>
+            <button class="quick-action-btn" data-message="Set up event reminders">
+                <i class="fas fa-bell"></i>
+                Reminder Help
+            </button>
+        </div>
         <div class="chat-input-container">
-            <div class="chat-quick-actions">
-                <button class="quick-action-btn" data-message="Show me upcoming events">📅 Upcoming Events</button>
-                <button class="quick-action-btn" data-message="How do I register for an event?">❓ How to Register</button>
-                <button class="quick-action-btn" data-message="Help with reminders">⏰ Reminder Help</button>
-            </div>
-            <div class="chat-input-wrapper">
-                <input type="text" class="chat-input" id="chatInput" placeholder="Type your message..." maxlength="500">
-                <button class="chat-send" id="chatSend">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
-            </div>
+            <input type="text" class="chat-input" id="chatInput" placeholder="Type your message...">
+            <button class="chat-send" id="chatSend">
+                <i class="fas fa-paper-plane"></i>
+            </button>
         </div>
     </div>
 
