@@ -979,9 +979,18 @@ function generateBotResponse(userMessage) {
         return "I can help you set reminders! 📲\n\nFor any event, click the 'Set Reminder' button to:\n• Add the event to your calendar (Google Calendar)\n• Enable browser notifications (if you allow them)\n• Get notified 1 hour before the event\n\nThis way you'll never miss an event you're excited about!";
     }
 
+    // Navigation and directions
+    if (message.includes('direction') || message.includes('navigate') || message.includes('how to get') || 
+        message.includes('where is') || message.includes('location') || message.includes('map') ||
+        message.includes('lr-w5') || message.includes('agora') || message.includes('sports complex') ||
+        message.includes('career center') || message.includes('career centre') || message.includes('swimming') ||
+        message.includes('e61h') || message.includes('hall')) {
+        return getNavigationGuide(message);
+    }
+
     // General questions
     if (message.includes('help') || message.includes('what can you do')) {
-        return "I'm your campus assistant! Here's how I can help:\n\n🎯 Find events that match your interests\n📝 Guide you through registration\n⏰ Help set up reminders\n🎓 Provide campus information\n📱 Answer questions about our platform\n\nJust ask me anything about campus events or student life!";
+        return "I'm your campus assistant! Here's how I can help:\n\n🎯 Find events that match your interests\n📝 Guide you through registration\n⏰ Help set up reminders\n🗺️ Provide campus navigation and directions\n🎓 Share campus information\n📱 Answer questions about our platform\n\nJust ask me anything about campus events, directions, or student life!";
     }
 
     // Default responses for unrecognized input
@@ -995,156 +1004,930 @@ function generateBotResponse(userMessage) {
     return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
 }
 
-// Updated setReminder functionality to ensure consistent behavior across devices
-function setReminder(eventId) {
-    const event = eventsData.find(e => e.id === eventId);
-    if (!event) return;
-
-    // Create calendar event
-    const startDate = new Date(`${event.date}T${event.time}`);
-    const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000); // 2 hours duration
-
-    const calendarUrl = generateCalendarUrl({
-        title: event.title,
-        description: event.description,
-        location: event.venue,
-        startDate: startDate,
-        endDate: endDate
-    });
-
-    // Open Google Calendar in a new tab for all devices
-    window.open(calendarUrl, '_blank');
-
-    showNotification(`Reminder set for ${event.title}!`);
-}
-
-// Generate calendar URL (Google Calendar)
-function generateCalendarUrl(eventDetails) {
-    const baseUrl = 'https://calendar.google.com/calendar/render?action=TEMPLATE';
-    const params = new URLSearchParams({
-        text: eventDetails.title,
-        details: eventDetails.description,
-        location: eventDetails.location,
-        dates: `${formatDateForCalendar(eventDetails.startDate)}/${formatDateForCalendar(eventDetails.endDate)}`
-    });
-
-    return `${baseUrl}&${params.toString()}`;
-}
-
-// Format date for calendar URL
-function formatDateForCalendar(date) {
-    return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-}
-
-// Schedule local notification (simulation)
-function scheduleNotification(event) {
-    const eventDate = new Date(`${event.date}T${event.time}`);
-    const notificationTime = new Date(eventDate.getTime() - 60 * 60 * 1000); // 1 hour before
+// Campus Navigation Guide based on the university map
+function getNavigationGuide(message) {
+    const lowerMessage = message.toLowerCase();
     
-    // Simulate notification scheduling
-    console.log(`Notification scheduled for ${notificationTime.toLocaleString()}`);
+    // Check for specific venue requests
+    if (lowerMessage.includes('lr-w5') || lowerMessage.includes('lr w5')) {
+        return "🏫 **Directions to LR-W5 (Lecture Room)**\n\n📍 **Starting from Main Entrance:**\n1. Enter campus and walk straight towards the central area\n2. Head towards the W-Building complex (green area on the map)\n3. LR-W5 is located in the W5 building section\n4. Look for the W5 building signage - it's part of the main academic complex\n\n⏱️ **Estimated walk time:** 3-5 minutes from main entrance\n📋 **Tip:** LR-W5 is commonly used for tech and academic events!";
+    }
     
-    // For demo purposes, show immediate notification
-    setTimeout(() => {
-        if ('Notification' in window && Notification.permission === 'granted') {
-            new Notification(`Upcoming Event: ${event.title}`, {
-                body: `Starting in 1 hour at ${event.venue}`,
-                icon: '/favicon.ico'
-            });
+    if (lowerMessage.includes('agora') && !lowerMessage.includes('south') && !lowerMessage.includes('north')) {
+        return "🏛️ **Directions to Main Agora (Outside W1)**\n\n📍 **Starting from Main Entrance:**\n1. Enter campus and walk straight ahead\n2. The Agora is the large open courtyard area in the center\n3. Look for the outdoor space adjacent to the W1 building\n4. It's the main gathering area - you'll see the open plaza\n\n⏱️ **Estimated walk time:** 2-3 minutes from main entrance\n📋 **Perfect for:** Outdoor concerts, festivals, and social gatherings!";
+    }
+    
+    if (lowerMessage.includes('south agora hall') || (lowerMessage.includes('south') && lowerMessage.includes('hall'))) {
+        return "🏢 **Directions to South Agora Halls 1-4**\n\n📍 **Starting from Main Entrance:**\n1. Enter campus and head towards the central Agora area\n2. From the main Agora, walk towards the southern section\n3. Look for the building complex labeled 'South Agora Halls'\n4. Halls 1-4 are numbered and clearly marked\n5. Hall 1 is closest to the main Agora, Hall 4 is furthest south\n\n⏱️ **Estimated walk time:** 4-6 minutes from main entrance\n📋 **Great for:** Art exhibitions, food fairs, and indoor social events!";
+    }
+    
+    if (lowerMessage.includes('north agora hall') || (lowerMessage.includes('north') && lowerMessage.includes('hall'))) {
+        return "🏢 **Directions to North Agora Hall**\n\n📍 **Starting from Main Entrance:**\n1. Enter campus and head towards the central Agora area\n2. From the main Agora, walk towards the northern section\n3. Look for the building marked 'North Agora Hall'\n4. It's located in the upper portion of the campus map\n\n⏱️ **Estimated walk time:** 5-7 minutes from main entrance\n📋 **Tip:** Less crowded alternative venue for events!";
+    }
+    
+    if (lowerMessage.includes('sports complex') || lowerMessage.includes('basketball') || lowerMessage.includes('sports hall')) {
+        return "🏀 **Directions to Sports Complex**\n\n📍 **Starting from Main Entrance:**\n1. Enter campus and walk towards the left (western) side\n2. Head past the main academic buildings\n3. Look for the large sports facility with courts\n4. The Sports Complex includes basketball courts and other sports facilities\n5. Follow signs for 'Sports Complex' or 'Sports Hall'\n\n⏱️ **Estimated walk time:** 6-8 minutes from main entrance\n📋 **Facilities:** Basketball courts, sports equipment, spectator seating!";
+    }
+    
+    if (lowerMessage.includes('career center') || lowerMessage.includes('career centre')) {
+        return "💼 **Directions to Career Center**\n\n📍 **Starting from Main Entrance:**\n1. Enter campus and head towards the central academic area\n2. Look for the administrative building complex\n3. The Career Center is typically located in the main services building\n4. Follow signs for 'Student Services' or 'Career Center'\n5. It's usually on the ground floor for easy access\n\n⏱️ **Estimated walk time:** 4-6 minutes from main entrance\n📋 **Services:** Career counseling, resume help, job interview prep!";
+    }
+    
+    if (lowerMessage.includes('swimming complex') || lowerMessage.includes('swimming pool') || lowerMessage.includes('pool')) {
+        return "🏊 **Directions to Swimming Complex**\n\n📍 **Starting from Main Entrance:**\n1. Enter campus and head towards the sports facilities area\n2. Walk past the main Sports Complex\n3. Look for the aquatic center - it's a separate building\n4. Follow signs for 'Swimming Pool' or 'Aquatic Center'\n5. The complex includes changing rooms and spectator areas\n\n⏱️ **Estimated walk time:** 7-10 minutes from main entrance\n📋 **Facilities:** Olympic-size pool, diving boards, changing rooms!";
+    }
+    
+    if (lowerMessage.includes('e61h') || lowerMessage.includes('e61') || lowerMessage.includes('e-61')) {
+        return "💻 **Directions to E61H (Computer Lab)**\n\n📍 **Starting from Main Entrance:**\n1. Enter campus and head towards the E-Building complex\n2. Look for the Eastern section of campus buildings\n3. Find the E61 building - it's part of the technology/computer science area\n4. E61H is the specific room within E61\n5. Follow signs for 'Computer Labs' or 'E-Building'\n\n⏱️ **Estimated walk time:** 5-7 minutes from main entrance\n📋 **Perfect for:** Coding bootcamps, tech workshops, computer classes!";
+    }
+    
+    // General navigation help
+    if (lowerMessage.includes('direction') || lowerMessage.includes('navigate') || lowerMessage.includes('map')) {
+        return "🗺️ **Campus Navigation Help**\n\nI can provide step-by-step directions to these venues:\n\n🏫 **Academic Venues:**\n• LR-W5 (Lecture Rooms)\n• E61H (Computer Labs)\n• Career Center\n\n🏛️ **Event Halls:**\n• Main Agora (Outdoor)\n• South Agora Halls 1-4\n• North Agora Hall\n\n🏃 **Sports Facilities:**\n• Sports Complex\n• Swimming Complex\n\n💡 **Just ask:** 'How to get to [venue name]' or 'Directions to [location]'\n\n📍 **Campus Tip:** Most venues are within 5-10 minutes walking distance from the main entrance!";
+    }
+    
+    // Fallback for location-related queries
+    return "🗺️ **Campus Navigation**\n\nI can help you get directions to any campus venue! Try asking:\n\n• 'How do I get to LR-W5?'\n• 'Where is the Sports Complex?'\n• 'Directions to South Agora Hall'\n• 'How to reach the Swimming Complex?'\n\nJust mention the venue name and I'll provide step-by-step directions! 🚶‍♂️";
+}
+
+// Close chat window on outside click
+document.addEventListener('click', function(event) {
+    if (!chatBubble.contains(event.target) && !chatWindow.contains(event.target)) {
+        if (isChatOpen) {
+            toggleChat();
         }
-    }, 3000);
-}
-
-// Share event functionality
-function shareEvent(eventId) {
-    const event = eventsData.find(e => e.id === eventId);
-    if (!event) return;
-
-    const shareData = {
-        title: event.title,
-        text: `Check out this amazing event: ${event.title}`,
-        url: window.location.href
-    };
-
-    // Use Web Share API if available
-    if (navigator.share) {
-        navigator.share(shareData).catch(err => {
-            console.log('Error sharing:', err);
-            fallbackShare(event);
-        });
-    } else {
-        fallbackShare(event);
     }
+});
+
+// Animate elements on page load
+function animateOnLoad() {
+    // Both header and hero are now visible by default
+    // No animation needed - content shows immediately
 }
 
-// Fallback share functionality
-function fallbackShare(event) {
-    const shareText = `Check out this amazing event: ${event.title} on ${event.date} at ${event.venue}. ${window.location.href}`;
+// Add initial styles for animation
+document.addEventListener('DOMContentLoaded', function() {
+    const header = document.querySelector('.header');
+    const hero = document.querySelector('.hero');
     
-    if (navigator.clipboard) {
-        navigator.clipboard.writeText(shareText).then(() => {
-            showNotification('Event link copied to clipboard!');
-        });
-    } else {
-        // Fallback for older browsers
-        const textarea = document.createElement('textarea');
-        textarea.value = shareText;
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
-        showNotification('Event link copied to clipboard!');
+    // Keep both header and hero visible by default
+    header.style.transition = 'all 0.6s ease';
+    hero.style.transition = 'all 0.6s ease';
+});
+
+// Service Worker registration for PWA features (optional)
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+        // Service worker registration would go here for offline functionality
+        console.log('Event Promoter app loaded successfully!');
+    });
+}
+
+// Export functions for testing (if needed)
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        eventsData,
+        formatTime,
+        generateCalendarUrl,
+        formatDateForCalendar
+    };
+}
+
+// Handle keyboard navigation
+function handleKeyDown(e) {
+    // Close modal on Escape key
+    if (e.key === 'Escape' && modalOverlay.classList.contains('active')) {
+        closeModal();
+    }
+    
+    // Close chat on Escape key
+    if (e.key === 'Escape' && isChatOpen) {
+        closeChat();
     }
 }
 
-// Show notification
-function showNotification(message) {
-    const notificationText = notification.querySelector('.notification-text');
-    notificationText.textContent = message;
-    notification.classList.add('show');
-
-    setTimeout(() => {
-        notification.classList.remove('show');
-    }, 4000);
+// Chat Functionality
+function toggleChat() {
+    if (isChatOpen) {
+        closeChat();
+    } else {
+        openChat();
+    }
 }
 
-// Decrease attendees for all events - REMOVED to prevent conflicts
-// function decreaseAttendeesForAllEvents() {
-//     eventsData.forEach(event => {
-//         if (event.attendees > 0) {
-//             event.attendees -= 10; // Decrease by 10 attendees
-//         }
-//     });
-//     renderEvents();
-// }
+function openChat() {
+    chatWindow.classList.add('active');
+    chatBubble.style.transform = 'scale(0.8)';
+    isChatOpen = true;
+    
+    // Focus on input for accessibility
+    setTimeout(() => {
+        chatInput.focus();
+    }, 300);
+}
 
-// Call the function immediately for testing - REMOVED
-// window.addEventListener('load', decreaseAttendeesForAllEvents);
+function closeChat() {
+    chatWindow.classList.remove('active');
+    chatBubble.style.transform = 'scale(1)';
+    isChatOpen = false;
+}
 
-// WebSocket connection setup - DISABLED for now to prevent conflicts
-// const socket = new WebSocket('ws://localhost:8080');
+function handleChatKeyPress(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendChatMessage();
+    }
+}
 
-// Listen for WebSocket messages - DISABLED
-// socket.addEventListener('message', function(event) {
-//     const data = JSON.parse(event.data);
+function handleChatInput(e) {
+    const hasText = e.target.value.trim().length > 0;
+    chatSend.disabled = !hasText;
+}
 
-//     if (data.type === 'attendeeUpdate') {
-//         const updatedEvent = eventsData.find(e => e.id === data.eventId);
-//         if (updatedEvent) {
-//             updatedEvent.attendees = data.attendees;
-//             renderEvents(); // Re-render events to reflect updated attendee counts
-//         }
-//     }
-// });
+function sendChatMessage() {
+    const message = chatInput.value.trim();
+    if (!message) return;
 
-// Handle WebSocket connection errors - DISABLED
-// socket.addEventListener('error', function(error) {
-//     console.error('WebSocket error:', error);
-//     showNotification('Unable to connect to the server. Some features may not work.');
-// });
+    // Add user message
+    addChatMessage(message, 'user');
+    
+    // Clear input
+    chatInput.value = '';
+    chatSend.disabled = true;
 
-// Handle WebSocket connection close - DISABLED
-// socket.addEventListener('close', function() {
-//     console.warn('WebSocket connection closed.');
-//     showNotification('Connection to the server was lost.');
-// });
+    // Show typing indicator
+    showTypingIndicator();
+
+    // Generate bot response
+    setTimeout(() => {
+        hideTypingIndicator();
+        const response = generateBotResponse(message);
+        addChatMessage(response, 'bot');
+    }, 1000 + Math.random() * 1000); // Random delay for realism
+}
+
+function handleQuickAction(e) {
+    const message = e.target.dataset.message;
+    chatInput.value = message;
+    sendChatMessage();
+}
+
+function addChatMessage(message, sender) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chat-message ${sender}-message`;
+    
+    const avatar = sender === 'user' ? '👤' : '🤖';
+    
+    messageDiv.innerHTML = `
+        <div class="message-avatar">${avatar}</div>
+        <div class="message-content">
+            <p>${message}</p>
+        </div>
+    `;
+
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function showTypingIndicator() {
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'chat-message bot-message typing-indicator';
+    typingDiv.id = 'typingIndicator';
+    
+    typingDiv.innerHTML = `
+        <div class="message-avatar">🤖</div>
+        <div class="message-content">
+            <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    `;
+
+    chatMessages.appendChild(typingDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    // Add typing animation CSS if not already added
+    if (!document.querySelector('#typingCSS')) {
+        const style = document.createElement('style');
+        style.id = 'typingCSS';
+        style.textContent = `
+            .typing-dots {
+                display: flex;
+                gap: 4px;
+                padding: 8px 0;
+            }
+            .typing-dots span {
+                width: 8px;
+                height: 8px;
+                background: var(--text-light);
+                border-radius: 50%;
+                animation: typing 1.4s infinite ease-in-out;
+            }
+            .typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+            .typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+            .typing-dots span:nth-child(3) { animation-delay: 0; }
+            @keyframes typing {
+                0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+                40% { transform: scale(1); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+}
+
+function hideTypingIndicator() {
+    const typingIndicator = document.getElementById('typingIndicator');
+    if (typingIndicator) {
+        typingIndicator.remove();
+    }
+}
+
+// Updated generateBotResponse to handle general questions more effectively
+function generateBotResponse(userMessage) {
+    const message = userMessage.toLowerCase();
+
+    // Event-related responses
+    if (message.includes('event') || message.includes('upcoming')) {
+        const upcomingEvents = eventsData.slice(0, 3);
+        let response = "Here are some upcoming events you might be interested in:\n\n";
+        upcomingEvents.forEach(event => {
+            const eventDate = new Date(event.date).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric'
+            });
+            response += `📅 ${event.title} - ${eventDate} at ${event.venue}\n`;
+        });
+        response += "\nYou can scroll up to see all events and click 'Join Now' to register!";
+        return response;
+    }
+
+    // Registration help
+    if (message.includes('register') || message.includes('join') || message.includes('sign up')) {
+        return "To register for an event:\n\n1. Find an event you like\n2. Click the 'Join Now' button\n3. Fill out the registration form with your name and email\n4. Add any special notes (optional)\n5. Submit your application\n\nYou'll get a confirmation notification once registered! 🎉";
+    }
+
+    // Reminder help
+    if (message.includes('reminder') || message.includes('calendar') || message.includes('notification')) {
+        return "I can help you set reminders! 📲\n\nFor any event, click the 'Set Reminder' button to:\n• Add the event to your calendar (Google Calendar)\n• Enable browser notifications (if you allow them)\n• Get notified 1 hour before the event\n\nThis way you'll never miss an event you're excited about!";
+    }
+
+    // Navigation and directions
+    if (message.includes('direction') || message.includes('navigate') || message.includes('how to get') || 
+        message.includes('where is') || message.includes('location') || message.includes('map') ||
+        message.includes('lr-w5') || message.includes('agora') || message.includes('sports complex') ||
+        message.includes('career center') || message.includes('career centre') || message.includes('swimming') ||
+        message.includes('e61h') || message.includes('hall')) {
+        return getNavigationGuide(message);
+    }
+
+    // General questions
+    if (message.includes('help') || message.includes('what can you do')) {
+        return "I'm your campus assistant! Here's how I can help:\n\n🎯 Find events that match your interests\n📝 Guide you through registration\n⏰ Help set up reminders\n🗺️ Provide campus navigation and directions\n🎓 Share campus information\n📱 Answer questions about our platform\n\nJust ask me anything about campus events, directions, or student life!";
+    }
+
+    // Default responses for unrecognized input
+    const defaultResponses = [
+        "That's interesting! Is there anything specific about campus events I can help you with? 🤔",
+        "I'd love to help! Could you tell me more about what you're looking for? Maybe an event type or specific question?",
+        "Great question! I'm here to help with anything related to campus events. What would you like to know? 🎓",
+        "I'm still learning! For now, I'm best at helping with event information, registration, and reminders. What can I help you with?"
+    ];
+
+    return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
+}
+
+// Campus Navigation Guide based on the university map
+function getNavigationGuide(message) {
+    const lowerMessage = message.toLowerCase();
+    
+    // Check for specific venue requests
+    if (lowerMessage.includes('lr-w5') || lowerMessage.includes('lr w5')) {
+        return "🏫 **Directions to LR-W5 (Lecture Room)**\n\n📍 **Starting from Main Entrance:**\n1. Enter campus and walk straight towards the central area\n2. Head towards the W-Building complex (green area on the map)\n3. LR-W5 is located in the W5 building section\n4. Look for the W5 building signage - it's part of the main academic complex\n\n⏱️ **Estimated walk time:** 3-5 minutes from main entrance\n📋 **Tip:** LR-W5 is commonly used for tech and academic events!";
+    }
+    
+    if (lowerMessage.includes('agora') && !lowerMessage.includes('south') && !lowerMessage.includes('north')) {
+        return "🏛️ **Directions to Main Agora (Outside W1)**\n\n📍 **Starting from Main Entrance:**\n1. Enter campus and walk straight ahead\n2. The Agora is the large open courtyard area in the center\n3. Look for the outdoor space adjacent to the W1 building\n4. It's the main gathering area - you'll see the open plaza\n\n⏱️ **Estimated walk time:** 2-3 minutes from main entrance\n📋 **Perfect for:** Outdoor concerts, festivals, and social gatherings!";
+    }
+    
+    if (lowerMessage.includes('south agora hall') || (lowerMessage.includes('south') && lowerMessage.includes('hall'))) {
+        return "🏢 **Directions to South Agora Halls 1-4**\n\n📍 **Starting from Main Entrance:**\n1. Enter campus and head towards the central Agora area\n2. From the main Agora, walk towards the southern section\n3. Look for the building complex labeled 'South Agora Halls'\n4. Halls 1-4 are numbered and clearly marked\n5. Hall 1 is closest to the main Agora, Hall 4 is furthest south\n\n⏱️ **Estimated walk time:** 4-6 minutes from main entrance\n📋 **Great for:** Art exhibitions, food fairs, and indoor social events!";
+    }
+    
+    if (lowerMessage.includes('north agora hall') || (lowerMessage.includes('north') && lowerMessage.includes('hall'))) {
+        return "🏢 **Directions to North Agora Hall**\n\n📍 **Starting from Main Entrance:**\n1. Enter campus and head towards the central Agora area\n2. From the main Agora, walk towards the northern section\n3. Look for the building marked 'North Agora Hall'\n4. It's located in the upper portion of the campus map\n\n⏱️ **Estimated walk time:** 5-7 minutes from main entrance\n📋 **Tip:** Less crowded alternative venue for events!";
+    }
+    
+    if (lowerMessage.includes('sports complex') || lowerMessage.includes('basketball') || lowerMessage.includes('sports hall')) {
+        return "🏀 **Directions to Sports Complex**\n\n📍 **Starting from Main Entrance:**\n1. Enter campus and walk towards the left (western) side\n2. Head past the main academic buildings\n3. Look for the large sports facility with courts\n4. The Sports Complex includes basketball courts and other sports facilities\n5. Follow signs for 'Sports Complex' or 'Sports Hall'\n\n⏱️ **Estimated walk time:** 6-8 minutes from main entrance\n📋 **Facilities:** Basketball courts, sports equipment, spectator seating!";
+    }
+    
+    if (lowerMessage.includes('career center') || lowerMessage.includes('career centre')) {
+        return "💼 **Directions to Career Center**\n\n📍 **Starting from Main Entrance:**\n1. Enter campus and head towards the central academic area\n2. Look for the administrative building complex\n3. The Career Center is typically located in the main services building\n4. Follow signs for 'Student Services' or 'Career Center'\n5. It's usually on the ground floor for easy access\n\n⏱️ **Estimated walk time:** 4-6 minutes from main entrance\n📋 **Services:** Career counseling, resume help, job interview prep!";
+    }
+    
+    if (lowerMessage.includes('swimming complex') || lowerMessage.includes('swimming pool') || lowerMessage.includes('pool')) {
+        return "🏊 **Directions to Swimming Complex**\n\n📍 **Starting from Main Entrance:**\n1. Enter campus and head towards the sports facilities area\n2. Walk past the main Sports Complex\n3. Look for the aquatic center - it's a separate building\n4. Follow signs for 'Swimming Pool' or 'Aquatic Center'\n5. The complex includes changing rooms and spectator areas\n\n⏱️ **Estimated walk time:** 7-10 minutes from main entrance\n📋 **Facilities:** Olympic-size pool, diving boards, changing rooms!";
+    }
+    
+    if (lowerMessage.includes('e61h') || lowerMessage.includes('e61') || lowerMessage.includes('e-61')) {
+        return "💻 **Directions to E61H (Computer Lab)**\n\n📍 **Starting from Main Entrance:**\n1. Enter campus and head towards the E-Building complex\n2. Look for the Eastern section of campus buildings\n3. Find the E61 building - it's part of the technology/computer science area\n4. E61H is the specific room within E61\n5. Follow signs for 'Computer Labs' or 'E-Building'\n\n⏱️ **Estimated walk time:** 5-7 minutes from main entrance\n📋 **Perfect for:** Coding bootcamps, tech workshops, computer classes!";
+    }
+    
+    // General navigation help
+    if (lowerMessage.includes('direction') || lowerMessage.includes('navigate') || lowerMessage.includes('map')) {
+        return "🗺️ **Campus Navigation Help**\n\nI can provide step-by-step directions to these venues:\n\n🏫 **Academic Venues:**\n• LR-W5 (Lecture Rooms)\n• E61H (Computer Labs)\n• Career Center\n\n🏛️ **Event Halls:**\n• Main Agora (Outdoor)\n• South Agora Halls 1-4\n• North Agora Hall\n\n🏃 **Sports Facilities:**\n• Sports Complex\n• Swimming Complex\n\n💡 **Just ask:** 'How to get to [venue name]' or 'Directions to [location]'\n\n📍 **Campus Tip:** Most venues are within 5-10 minutes walking distance from the main entrance!";
+    }
+    
+    // Fallback for location-related queries
+    return "🗺️ **Campus Navigation**\n\nI can help you get directions to any campus venue! Try asking:\n\n• 'How do I get to LR-W5?'\n• 'Where is the Sports Complex?'\n• 'Directions to South Agora Hall'\n• 'How to reach the Swimming Complex?'\n\nJust mention the venue name and I'll provide step-by-step directions! 🚶‍♂️";
+}
+
+// Close chat window on outside click
+document.addEventListener('click', function(event) {
+    if (!chatBubble.contains(event.target) && !chatWindow.contains(event.target)) {
+        if (isChatOpen) {
+            toggleChat();
+        }
+    }
+});
+
+// Animate elements on page load
+function animateOnLoad() {
+    // Both header and hero are now visible by default
+    // No animation needed - content shows immediately
+}
+
+// Add initial styles for animation
+document.addEventListener('DOMContentLoaded', function() {
+    const header = document.querySelector('.header');
+    const hero = document.querySelector('.hero');
+    
+    // Keep both header and hero visible by default
+    header.style.transition = 'all 0.6s ease';
+    hero.style.transition = 'all 0.6s ease';
+});
+
+// Service Worker registration for PWA features (optional)
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+        // Service worker registration would go here for offline functionality
+        console.log('Event Promoter app loaded successfully!');
+    });
+}
+
+// Export functions for testing (if needed)
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        eventsData,
+        formatTime,
+        generateCalendarUrl,
+        formatDateForCalendar
+    };
+}
+
+// Handle keyboard navigation
+function handleKeyDown(e) {
+    // Close modal on Escape key
+    if (e.key === 'Escape' && modalOverlay.classList.contains('active')) {
+        closeModal();
+    }
+    
+    // Close chat on Escape key
+    if (e.key === 'Escape' && isChatOpen) {
+        closeChat();
+    }
+}
+
+// Chat Functionality
+function toggleChat() {
+    if (isChatOpen) {
+        closeChat();
+    } else {
+        openChat();
+    }
+}
+
+function openChat() {
+    chatWindow.classList.add('active');
+    chatBubble.style.transform = 'scale(0.8)';
+    isChatOpen = true;
+    
+    // Focus on input for accessibility
+    setTimeout(() => {
+        chatInput.focus();
+    }, 300);
+}
+
+function closeChat() {
+    chatWindow.classList.remove('active');
+    chatBubble.style.transform = 'scale(1)';
+    isChatOpen = false;
+}
+
+function handleChatKeyPress(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendChatMessage();
+    }
+}
+
+function handleChatInput(e) {
+    const hasText = e.target.value.trim().length > 0;
+    chatSend.disabled = !hasText;
+}
+
+function sendChatMessage() {
+    const message = chatInput.value.trim();
+    if (!message) return;
+
+    // Add user message
+    addChatMessage(message, 'user');
+    
+    // Clear input
+    chatInput.value = '';
+    chatSend.disabled = true;
+
+    // Show typing indicator
+    showTypingIndicator();
+
+    // Generate bot response
+    setTimeout(() => {
+        hideTypingIndicator();
+        const response = generateBotResponse(message);
+        addChatMessage(response, 'bot');
+    }, 1000 + Math.random() * 1000); // Random delay for realism
+}
+
+function handleQuickAction(e) {
+    const message = e.target.dataset.message;
+    chatInput.value = message;
+    sendChatMessage();
+}
+
+function addChatMessage(message, sender) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chat-message ${sender}-message`;
+    
+    const avatar = sender === 'user' ? '👤' : '🤖';
+    
+    messageDiv.innerHTML = `
+        <div class="message-avatar">${avatar}</div>
+        <div class="message-content">
+            <p>${message}</p>
+        </div>
+    `;
+
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function showTypingIndicator() {
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'chat-message bot-message typing-indicator';
+    typingDiv.id = 'typingIndicator';
+    
+    typingDiv.innerHTML = `
+        <div class="message-avatar">🤖</div>
+        <div class="message-content">
+            <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    `;
+
+    chatMessages.appendChild(typingDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    // Add typing animation CSS if not already added
+    if (!document.querySelector('#typingCSS')) {
+        const style = document.createElement('style');
+        style.id = 'typingCSS';
+        style.textContent = `
+            .typing-dots {
+                display: flex;
+                gap: 4px;
+                padding: 8px 0;
+            }
+            .typing-dots span {
+                width: 8px;
+                height: 8px;
+                background: var(--text-light);
+                border-radius: 50%;
+                animation: typing 1.4s infinite ease-in-out;
+            }
+            .typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+            .typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+            .typing-dots span:nth-child(3) { animation-delay: 0; }
+            @keyframes typing {
+                0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+                40% { transform: scale(1); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+}
+
+function hideTypingIndicator() {
+    const typingIndicator = document.getElementById('typingIndicator');
+    if (typingIndicator) {
+        typingIndicator.remove();
+    }
+}
+
+// Updated generateBotResponse to handle general questions more effectively
+function generateBotResponse(userMessage) {
+    const message = userMessage.toLowerCase();
+
+    // Event-related responses
+    if (message.includes('event') || message.includes('upcoming')) {
+        const upcomingEvents = eventsData.slice(0, 3);
+        let response = "Here are some upcoming events you might be interested in:\n\n";
+        upcomingEvents.forEach(event => {
+            const eventDate = new Date(event.date).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric'
+            });
+            response += `📅 ${event.title} - ${eventDate} at ${event.venue}\n`;
+        });
+        response += "\nYou can scroll up to see all events and click 'Join Now' to register!";
+        return response;
+    }
+
+    // Registration help
+    if (message.includes('register') || message.includes('join') || message.includes('sign up')) {
+        return "To register for an event:\n\n1. Find an event you like\n2. Click the 'Join Now' button\n3. Fill out the registration form with your name and email\n4. Add any special notes (optional)\n5. Submit your application\n\nYou'll get a confirmation notification once registered! 🎉";
+    }
+
+    // Reminder help
+    if (message.includes('reminder') || message.includes('calendar') || message.includes('notification')) {
+        return "I can help you set reminders! 📲\n\nFor any event, click the 'Set Reminder' button to:\n• Add the event to your calendar (Google Calendar)\n• Enable browser notifications (if you allow them)\n• Get notified 1 hour before the event\n\nThis way you'll never miss an event you're excited about!";
+    }
+
+    // Navigation and directions
+    if (message.includes('direction') || message.includes('navigate') || message.includes('how to get') || 
+        message.includes('where is') || message.includes('location') || message.includes('map') ||
+        message.includes('lr-w5') || message.includes('agora') || message.includes('sports complex') ||
+        message.includes('career center') || message.includes('career centre') || message.includes('swimming') ||
+        message.includes('e61h') || message.includes('hall')) {
+        return getNavigationGuide(message);
+    }
+
+    // General questions
+    if (message.includes('help') || message.includes('what can you do')) {
+        return "I'm your campus assistant! Here's how I can help:\n\n🎯 Find events that match your interests\n📝 Guide you through registration\n⏰ Help set up reminders\n🗺️ Provide campus navigation and directions\n🎓 Share campus information\n📱 Answer questions about our platform\n\nJust ask me anything about campus events, directions, or student life!";
+    }
+
+    // Default responses for unrecognized input
+    const defaultResponses = [
+        "That's interesting! Is there anything specific about campus events I can help you with? 🤔",
+        "I'd love to help! Could you tell me more about what you're looking for? Maybe an event type or specific question?",
+        "Great question! I'm here to help with anything related to campus events. What would you like to know? 🎓",
+        "I'm still learning! For now, I'm best at helping with event information, registration, and reminders. What can I help you with?"
+    ];
+
+    return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
+}
+
+// Campus Navigation Guide based on the university map
+function getNavigationGuide(message) {
+    const lowerMessage = message.toLowerCase();
+    
+    // Check for specific venue requests
+    if (lowerMessage.includes('lr-w5') || lowerMessage.includes('lr w5')) {
+        return "🏫 **Directions to LR-W5 (Lecture Room)**\n\n📍 **Starting from Main Entrance:**\n1. Enter campus and walk straight towards the central area\n2. Head towards the W-Building complex (green area on the map)\n3. LR-W5 is located in the W5 building section\n4. Look for the W5 building signage - it's part of the main academic complex\n\n⏱️ **Estimated walk time:** 3-5 minutes from main entrance\n📋 **Tip:** LR-W5 is commonly used for tech and academic events!";
+    }
+    
+    if (lowerMessage.includes('agora') && !lowerMessage.includes('south') && !lowerMessage.includes('north')) {
+        return "🏛️ **Directions to Main Agora (Outside W1)**\n\n📍 **Starting from Main Entrance:**\n1. Enter campus and walk straight ahead\n2. The Agora is the large open courtyard area in the center\n3. Look for the outdoor space adjacent to the W1 building\n4. It's the main gathering area - you'll see the open plaza\n\n⏱️ **Estimated walk time:** 2-3 minutes from main entrance\n📋 **Perfect for:** Outdoor concerts, festivals, and social gatherings!";
+    }
+    
+    if (lowerMessage.includes('south agora hall') || (lowerMessage.includes('south') && lowerMessage.includes('hall'))) {
+        return "🏢 **Directions to South Agora Halls 1-4**\n\n📍 **Starting from Main Entrance:**\n1. Enter campus and head towards the central Agora area\n2. From the main Agora, walk towards the southern section\n3. Look for the building complex labeled 'South Agora Halls'\n4. Halls 1-4 are numbered and clearly marked\n5. Hall 1 is closest to the main Agora, Hall 4 is furthest south\n\n⏱️ **Estimated walk time:** 4-6 minutes from main entrance\n📋 **Great for:** Art exhibitions, food fairs, and indoor social events!";
+    }
+    
+    if (lowerMessage.includes('north agora hall') || (lowerMessage.includes('north') && lowerMessage.includes('hall'))) {
+        return "🏢 **Directions to North Agora Hall**\n\n📍 **Starting from Main Entrance:**\n1. Enter campus and head towards the central Agora area\n2. From the main Agora, walk towards the northern section\n3. Look for the building marked 'North Agora Hall'\n4. It's located in the upper portion of the campus map\n\n⏱️ **Estimated walk time:** 5-7 minutes from main entrance\n📋 **Tip:** Less crowded alternative venue for events!";
+    }
+    
+    if (lowerMessage.includes('sports complex') || lowerMessage.includes('basketball') || lowerMessage.includes('sports hall')) {
+        return "🏀 **Directions to Sports Complex**\n\n📍 **Starting from Main Entrance:**\n1. Enter campus and walk towards the left (western) side\n2. Head past the main academic buildings\n3. Look for the large sports facility with courts\n4. The Sports Complex includes basketball courts and other sports facilities\n5. Follow signs for 'Sports Complex' or 'Sports Hall'\n\n⏱️ **Estimated walk time:** 6-8 minutes from main entrance\n📋 **Facilities:** Basketball courts, sports equipment, spectator seating!";
+    }
+    
+    if (lowerMessage.includes('career center') || lowerMessage.includes('career centre')) {
+        return "💼 **Directions to Career Center**\n\n📍 **Starting from Main Entrance:**\n1. Enter campus and head towards the central academic area\n2. Look for the administrative building complex\n3. The Career Center is typically located in the main services building\n4. Follow signs for 'Student Services' or 'Career Center'\n5. It's usually on the ground floor for easy access\n\n⏱️ **Estimated walk time:** 4-6 minutes from main entrance\n📋 **Services:** Career counseling, resume help, job interview prep!";
+    }
+    
+    if (lowerMessage.includes('swimming complex') || lowerMessage.includes('swimming pool') || lowerMessage.includes('pool')) {
+        return "🏊 **Directions to Swimming Complex**\n\n📍 **Starting from Main Entrance:**\n1. Enter campus and head towards the sports facilities area\n2. Walk past the main Sports Complex\n3. Look for the aquatic center - it's a separate building\n4. Follow signs for 'Swimming Pool' or 'Aquatic Center'\n5. The complex includes changing rooms and spectator areas\n\n⏱️ **Estimated walk time:** 7-10 minutes from main entrance\n📋 **Facilities:** Olympic-size pool, diving boards, changing rooms!";
+    }
+    
+    if (lowerMessage.includes('e61h') || lowerMessage.includes('e61') || lowerMessage.includes('e-61')) {
+        return "💻 **Directions to E61H (Computer Lab)**\n\n📍 **Starting from Main Entrance:**\n1. Enter campus and head towards the E-Building complex\n2. Look for the Eastern section of campus buildings\n3. Find the E61 building - it's part of the technology/computer science area\n4. E61H is the specific room within E61\n5. Follow signs for 'Computer Labs' or 'E-Building'\n\n⏱️ **Estimated walk time:** 5-7 minutes from main entrance\n📋 **Perfect for:** Coding bootcamps, tech workshops, computer classes!";
+    }
+    
+    // General navigation help
+    if (lowerMessage.includes('direction') || lowerMessage.includes('navigate') || lowerMessage.includes('map')) {
+        return "🗺️ **Campus Navigation Help**\n\nI can provide step-by-step directions to these venues:\n\n🏫 **Academic Venues:**\n• LR-W5 (Lecture Rooms)\n• E61H (Computer Labs)\n• Career Center\n\n🏛️ **Event Halls:**\n• Main Agora (Outdoor)\n• South Agora Halls 1-4\n• North Agora Hall\n\n🏃 **Sports Facilities:**\n• Sports Complex\n• Swimming Complex\n\n💡 **Just ask:** 'How to get to [venue name]' or 'Directions to [location]'\n\n📍 **Campus Tip:** Most venues are within 5-10 minutes walking distance from the main entrance!";
+    }
+    
+    // Fallback for location-related queries
+    return "🗺️ **Campus Navigation**\n\nI can help you get directions to any campus venue! Try asking:\n\n• 'How do I get to LR-W5?'\n• 'Where is the Sports Complex?'\n• 'Directions to South Agora Hall'\n• 'How to reach the Swimming Complex?'\n\nJust mention the venue name and I'll provide step-by-step directions! 🚶‍♂️";
+}
+
+// Close chat window on outside click
+document.addEventListener('click', function(event) {
+    if (!chatBubble.contains(event.target) && !chatWindow.contains(event.target)) {
+        if (isChatOpen) {
+            toggleChat();
+        }
+    }
+});
+
+// Animate elements on page load
+function animateOnLoad() {
+    // Both header and hero are now visible by default
+    // No animation needed - content shows immediately
+}
+
+// Add initial styles for animation
+document.addEventListener('DOMContentLoaded', function() {
+    const header = document.querySelector('.header');
+    const hero = document.querySelector('.hero');
+    
+    // Keep both header and hero visible by default
+    header.style.transition = 'all 0.6s ease';
+    hero.style.transition = 'all 0.6s ease';
+});
+
+// Service Worker registration for PWA features (optional)
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+        // Service worker registration would go here for offline functionality
+        console.log('Event Promoter app loaded successfully!');
+    });
+}
+
+// Export functions for testing (if needed)
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        eventsData,
+        formatTime,
+        generateCalendarUrl,
+        formatDateForCalendar
+    };
+}
+
+// Handle keyboard navigation
+function handleKeyDown(e) {
+    // Close modal on Escape key
+    if (e.key === 'Escape' && modalOverlay.classList.contains('active')) {
+        closeModal();
+    }
+    
+    // Close chat on Escape key
+    if (e.key === 'Escape' && isChatOpen) {
+        closeChat();
+    }
+}
+
+// Chat Functionality
+function toggleChat() {
+    if (isChatOpen) {
+        closeChat();
+    } else {
+        openChat();
+    }
+}
+
+function openChat() {
+    chatWindow.classList.add('active');
+    chatBubble.style.transform = 'scale(0.8)';
+    isChatOpen = true;
+    
+    // Focus on input for accessibility
+    setTimeout(() => {
+        chatInput.focus();
+    }, 300);
+}
+
+function closeChat() {
+    chatWindow.classList.remove('active');
+    chatBubble.style.transform = 'scale(1)';
+    isChatOpen = false;
+}
+
+function handleChatKeyPress(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendChatMessage();
+    }
+}
+
+function handleChatInput(e) {
+    const hasText = e.target.value.trim().length > 0;
+    chatSend.disabled = !hasText;
+}
+
+function sendChatMessage() {
+    const message = chatInput.value.trim();
+    if (!message) return;
+
+    // Add user message
+    addChatMessage(message, 'user');
+    
+    // Clear input
+    chatInput.value = '';
+    chatSend.disabled = true;
+
+    // Show typing indicator
+    showTypingIndicator();
+
+    // Generate bot response
+    setTimeout(() => {
+        hideTypingIndicator();
+        const response = generateBotResponse(message);
+        addChatMessage(response, 'bot');
+    }, 1000 + Math.random() * 1000); // Random delay for realism
+}
+
+function handleQuickAction(e) {
+    const message = e.target.dataset.message;
+    chatInput.value = message;
+    sendChatMessage();
+}
+
+function addChatMessage(message, sender) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chat-message ${sender}-message`;
+    
+    const avatar = sender === 'user' ? '👤' : '🤖';
+    
+    messageDiv.innerHTML = `
+        <div class="message-avatar">${avatar}</div>
+        <div class="message-content">
+            <p>${message}</p>
+        </div>
+    `;
+
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function showTypingIndicator() {
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'chat-message bot-message typing-indicator';
+    typingDiv.id = 'typingIndicator';
+    
+    typingDiv.innerHTML = `
+        <div class="message-avatar">🤖</div>
+        <div class="message-content">
+            <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    `;
+
+    chatMessages.appendChild(typingDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    // Add typing animation CSS if not already added
+    if (!document.querySelector('#typingCSS')) {
+        const style = document.createElement('style');
+        style.id = 'typingCSS';
+        style.textContent = `
+            .typing-dots {
+                display: flex;
+                gap: 4px;
+                padding: 8px 0;
+            }
+            .typing-dots span {
+                width: 8px;
+                height: 8px;
+                background: var(--text-light);
+                border-radius: 50%;
+                animation: typing 1.4s infinite ease-in-out;
+            }
+            .typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+            .typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+            .typing-dots span:nth-child(3) { animation-delay: 0; }
+            @keyframes typing {
+                0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+                40% { transform: scale(1); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+}
+
+function hideTypingIndicator() {
+    const typingIndicator = document.getElementById('typingIndicator');
+    if (typingIndicator) {
+        typingIndicator.remove();
+    }
+}
+
+// Updated generateBotResponse to handle general questions more effectively
+function generateBotResponse(userMessage) {
+    const message = userMessage.toLowerCase();
+
+    // Event-related responses
+    if (message.includes('event') || message.includes('upcoming')) {
+        const upcomingEvents = eventsData.slice(0, 3);
+        let response = "Here are some upcoming events you might be interested in:\n\n";
+        upcomingEvents.forEach(event => {
+            const eventDate = new Date(event.date).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric'
+            });
+            response += `📅 ${event.title} - ${eventDate} at ${event.venue}\n`;
+        });
+        response += "\nYou can scroll up to see all events and click 'Join Now' to register!";
+        return response;
+    }
+
+    // Registration help
+    if (message.includes('register') || message.includes('join') || message.includes('sign up')) {
+        return "To register for an event:\n\n1. Find an event you like\n2. Click the 'Join Now' button\n3. Fill out the registration form with your name and email\n4. Add any special notes (optional)\n5. Submit your application\n\nYou'll get a confirmation notification once registered! 🎉";
+    }
+
+    // Reminder help
+    if (message.includes('reminder') || message.includes('calendar') || message.includes('notification')) {
+        return "I can help you set reminders! 📲\n\nFor any event, click the 'Set Reminder' button to:\n• Add the event to your calendar (Google Calendar)\n• Enable browser notifications (if you allow them)\n• Get notified 1 hour before the event\n\nThis way you'll never miss an event you're excited about!";
+    }
+
+    // Navigation and directions
+    if (message.includes('direction') || message.includes('navigate') || message.includes('how to get') || 
+        message.includes('where is') || message.includes('location') || message.includes('map') ||
+        message.includes('lr-w5') || message.includes('agora') || message.includes('sports complex') ||
+        message.includes('career center') || message.includes('career centre') || message.includes('swimming') ||
+        message.includes('e61h') || message.includes('hall')) {
+        return getNavigationGuide(message);
+    }
+
+    // General questions
+    if (message.includes('help') || message.includes('what can you do')) {
+        return "I'm your campus assistant! Here's how I can help:\n\n🎯 Find events that match your interests\n📝 Guide you through registration\n⏰ Help set up reminders\n🗺️ Provide campus navigation and directions\n🎓 Share campus information\n📱 Answer questions about our platform\n\nJust ask me anything about campus events, directions, or student life!";
+    }
+
+    // Default responses for unrecognized input
+    const defaultResponses = [
+        "That's interesting! Is there anything specific about campus events I can help you with? 🤔",
+        "I'd love to help! Could you tell me more about what you're looking for? Maybe an event type or specific question?",
+        "Great question! I'm here to help with anything related to campus events. What would you like to know? 🎓",
+        "I'm still learning! For now, I'm best at helping with event information, registration, and reminders. What can I help you with?"
+    ];
+
+    return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
+}
+
+// Campus Navigation Guide based on the university map
+function getNavigationGuide(message) {
+    const lowerMessage = message.toLowerCase();
+    
+    // Check for specific venue requests
+    if (lowerMessage.includes('lr-w5') || lowerMessage.includes('lr w5')) {
+        return "🏫 **Directions to LR-W5 (Lecture Room)**\n\n📍 **Starting from Main Entrance:**\n1. Enter campus and walk straight towards the central area\n2. Head towards the W-Building complex (green area on the map)\n3. LR-W5 is located in the W5 building section\n4. Look for the W5 building signage - it's part of the main academic complex\n\n⏱️ **Estimated walk time:** 3-5 minutes from main entrance\n📋 **Tip:** LR-W5 is commonly used for tech and academic events!";
+    }
+    
+    if (lowerMessage.includes('agora') && !lowerMessage.includes('south') && !lowerMessage.includes('north')) {
+        return "🏛️ **Directions to Main Agora (Outside W1)**\n\n📍 **Starting from Main Entrance:**\n1. Enter campus and walk straight ahead\n2. The Agora is the large open courtyard area in the center\n3. Look for the outdoor space adjacent to the W1 building\n4. It's the main gathering area - you'll see the open plaza\n\n⏱️ **Estimated walk time:** 2-3 minutes from main entrance\n📋 **Perfect for:** Outdoor concerts, festivals, and social gatherings!";
+    }
+    
+    if (lowerMessage.includes('south agora hall') || (lowerMessage.includes('south') && lowerMessage.includes('hall'))) {
+        return "🏢 **Directions to South Agora Halls 1-4**\n\n📍 **Starting from Main Entrance:**\n1. Enter campus and head towards the central Agora area\n2. From the main Agora, walk towards the southern section\n3. Look for the building complex labeled 'South Agora Halls'\n4. Halls 1-4 are numbered and clearly marked\n5. Hall 1 is closest to the main Agora, Hall 4 is furthest south\n\n⏱️ **Estimated walk time:** 4-6 minutes from main entrance\n📋 **Great for:** Art exhibitions, food fairs, and indoor social events!";
+    }
+    
+    if (lowerMessage.includes('north agora hall') || (lowerMessage.includes('north') && lowerMessage.includes('hall'))) {
+        return "🏢 **Directions to North Agora Hall**\n\n📍 **Starting from Main Entrance:**\n1. Enter campus and head towards the central Agora area\n2. From the main Agora, walk towards the northern section\n3. Look for the building marked 'North Agora Hall'\n4. It's located in the upper portion of the campus map\n\n⏱️ **Estimated walk time:** 5-7 minutes from main entrance\n📋 **Tip:** Less crowded alternative venue for events!";
+    }
+    
+    if (lowerMessage.includes('sports complex') || lowerMessage.includes('basketball') || lowerMessage.includes('sports hall')) {
+        return "🏀 **Directions to Sports Complex**\n\n📍 **Starting from Main Entrance:**\n1. Enter campus and walk towards the left (western) side\n2. Head past the main academic buildings\n3. Look for the large sports facility with courts\n4. The Sports Complex includes basketball courts and other sports facilities\n5. Follow signs for 'Sports Complex' or 'Sports Hall'\n\n⏱️ **Estimated walk time:** 6-8 minutes from main entrance\n📋 **Facilities:** Basketball courts, sports equipment, spectator seating!";
+    }
+    
+    if (lowerMessage.includes('career center') || lowerMessage.includes('career centre')) {
+        return "💼 **Directions to Career Center**\n\n📍 **Starting from Main Entrance:**\n1. Enter campus and head towards the central academic area\n2. Look for the administrative building complex\n3. The Career Center is typically located in the main services building\n4. Follow signs for 'Student Services' or 'Career Center'\n5. It's usually on the ground floor for easy access\n\n⏱️ **Estimated walk time:** 4-6 minutes from main entrance\n📋 **Services:** Career counseling, resume help, job interview prep!";
+    }
+    
+    if (lowerMessage.includes('swimming complex') || lowerMessage.includes('swimming pool') || lowerMessage.includes('pool')) {
+        return "🏊 **Directions to Swimming Complex**\n\n📍 **Starting from Main Entrance:**\n1. Enter campus and head towards the sports facilities area\n2. Walk past the main Sports Complex\n3. Look for the aquatic center - it's a separate building\n4. Follow signs for 'Swimming Pool' or 'Aquatic Center'\n5. The complex includes changing rooms and spectator areas\n\n⏱️ **Estimated walk time:** 7-10 minutes from main entrance\n📋 **Facilities:** Olympic-size pool, diving boards, changing rooms!";
+    }
+    
+    if (lowerMessage.includes('e61h') || lowerMessage.includes('e61') || lowerMessage.includes('e-61')) {
+        return "💻 **Directions to E61H (Computer Lab)**\n\n📍 **Starting from Main Entrance:**\n1. Enter campus and head towards the E-Building complex\n2. Look for the Eastern section of campus buildings\n3. Find the E61 building - it's part of the technology/computer science area\n4. E61H is the specific room within E61\n5. Follow signs for 'Computer Labs' or 'E-Building'\n\n⏱️ **Estimated walk time:** 5-7 minutes from main entrance\n📋 **Perfect for:** Coding bootcamps, tech workshops, computer classes!";
+    }
+    
+    // General navigation help
+    if (lowerMessage.includes('direction') || lowerMessage.includes('navigate') || lowerMessage.includes('map')) {
+        return "🗺️ **Campus Navigation Help**\n\nI can provide step-by-step directions to these venues:\n\n🏫 **Academic Venues:**\n• LR-W5 (Lecture Rooms)\n• E61H (Computer Labs)\n• Career Center\n\n🏛️ **Event Halls:**\n• Main Agora (Outdoor)\n• South Agora Halls 1-4\n• North Agora Hall\n\n🏃 **Sports Facilities:**\n• Sports Complex\n• Swimming Complex\n\n💡 **Just ask:** 'How to get to [venue name]' or 'Directions to [location]'\n\n📍 **Campus Tip:** Most venues are within 5-10 minutes walking distance from the main entrance!";
+    }
+    
+    // Fallback for location-related queries
+    return "🗺️ **Campus Navigation**\n\nI can help you get directions to any campus venue! Try asking:\n\n• 'How do I get to LR-W5?'\n• 'Where is the Sports Complex?'\n• 'Directions to South Agora Hall'\n• 'How to reach the Swimming Complex?'\n\nJust mention the venue name and I'll provide step-by-step directions! 🚶‍♂️";
+}

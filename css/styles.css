@@ -599,8 +599,8 @@ body {
     position: fixed;
     bottom: 20px;
     right: 20px;
-    width: 60px;
-    height: 60px;
+    width: 70px;
+    height: 70px;
     background: linear-gradient(135deg, var(--accent-color) 0%, #00a693 100%);
     border-radius: 50%;
     display: flex;
@@ -619,13 +619,13 @@ body {
 }
 
 .chat-bubble-icon {
-    font-size: 1.5rem;
+    font-size: 1.7rem;
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
 .chat-bubble-tooltip {
     position: absolute;
-    bottom: 70px;
+    bottom: 80px;
     right: 0;
     background: var(--text-dark);
     color: var(--white);
@@ -669,10 +669,10 @@ body {
 
 .chat-window {
     position: fixed;
-    bottom: 100px;
+    bottom: 110px;
     right: 20px;
-    width: 380px;
-    height: 500px;
+    width: 420px;
+    height: 550px;
     background: var(--white);
     border-radius: var(--border-radius);
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
@@ -1074,7 +1074,7 @@ body {
 /* Mobile Responsive for Chat */
 @media (max-width: 480px) {
     .chat-window {
-        bottom: 80px;
+        bottom: 90px;
         right: 10px;
         left: 10px;
         width: auto;
@@ -1085,12 +1085,12 @@ body {
     .chat-bubble {
         bottom: 15px;
         right: 15px;
-        width: 55px;
-        height: 55px;
+        width: 65px;
+        height: 65px;
     }
     
     .chat-bubble-icon {
-        font-size: 1.3rem;
+        font-size: 1.5rem;
     }
     
     .chat-bubble-tooltip {
@@ -1122,7 +1122,16 @@ body {
     }
 
     .chat-window {
-        width: 320px;
-        height: 450px;
+        width: 360px;
+        height: 500px;
+    }
+    
+    .chat-bubble {
+        width: 65px;
+        height: 65px;
+    }
+    
+    .chat-bubble-icon {
+        font-size: 1.6rem;
     }
 }
