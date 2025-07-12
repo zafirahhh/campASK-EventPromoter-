@@ -799,270 +799,720 @@ if (typeof module !== 'undefined' && module.exports) {
     };
 }
 
-// Handle keyboard navigation
-function handleKeyDown(e) {
-    // Close modal on Escape key
-    if (e.key === 'Escape' && modalOverlay.classList.contains('active')) {
-        closeModal();
-    }
-    
-    // Close chat on Escape key
-    if (e.key === 'Escape' && isChatOpen) {
-        closeChat();
-    }
-}
+// Share Event Function
+function shareEvent(eventId) {
+    const event = eventsData.find(e => e.id === eventId);
+    if (!event) return;
 
-// Chat Functionality
-function toggleChat() {
-    if (isChatOpen) {
-        closeChat();
+    const eventDate = new Date(event.date);
+    const formattedDate = eventDate.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+    
+    const formattedTime = formatTime(event.time);
+    
+    const shareText = `🎉 Check out this amazing campus event!\n\n` +
+                     `📅 ${event.title}\n` +
+                     `🗓️ ${formattedDate} at ${formattedTime}\n` +
+                     `📍 ${event.venue}\n` +
+                     `👥 ${event.attendees}/${event.maxAttendees} attendees\n\n` +
+                     `${event.description}\n\n` +
+                     `Join me at this event! 🎯`;
+
+    // Check if Web Share API is supported
+    if (navigator.share) {
+        navigator.share({
+            title: `Campus Event: ${event.title}`,
+            text: shareText,
+            url: window.location.href
+        }).then(() => {
+            showNotification('Event shared successfully! 📤');
+        }).catch((error) => {
+            console.log('Error sharing:', error);
+            fallbackShare(shareText, event);
+        });
     } else {
-        openChat();
+        // Fallback for browsers that don't support Web Share API
+        fallbackShare(shareText, event);
     }
 }
 
-function openChat() {
-    chatWindow.classList.add('active');
-    chatBubble.style.transform = 'scale(0.8)';
-    isChatOpen = true;
+// Fallback share function for browsers without Web Share API
+function fallbackShare(shareText, event) {
+    // Create a temporary textarea to copy text to clipboard
+    const textArea = document.createElement('textarea');
+    textArea.value = shareText;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-9999px';
+    textArea.style.top = '-9999px';
+    document.body.appendChild(textArea);
+    textArea.select();
     
-    // Focus on input for accessibility
-    setTimeout(() => {
-        chatInput.focus();
-    }, 300);
-}
-
-function closeChat() {
-    chatWindow.classList.remove('active');
-    chatBubble.style.transform = 'scale(1)';
-    isChatOpen = false;
-}
-
-function handleChatKeyPress(e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendChatMessage();
+    try {
+        document.execCommand('copy');
+        showNotification('Event details copied to clipboard! 📋 Share it with your friends!');
+        
+        // Show additional sharing options
+        showShareOptions(event, shareText);
+    } catch (err) {
+        console.error('Could not copy text: ', err);
+        showNotification('Unable to copy to clipboard. Please manually share the event details.');
     }
+    
+    document.body.removeChild(textArea);
 }
 
-function handleChatInput(e) {
-    const hasText = e.target.value.trim().length > 0;
-    chatSend.disabled = !hasText;
-}
-
-function sendChatMessage() {
-    const message = chatInput.value.trim();
-    if (!message) return;
-
-    // Add user message
-    addChatMessage(message, 'user');
-    
-    // Clear input
-    chatInput.value = '';
-    chatSend.disabled = true;
-
-    // Show typing indicator
-    showTypingIndicator();
-
-    // Generate bot response
-    setTimeout(() => {
-        hideTypingIndicator();
-        const response = generateBotResponse(message);
-        addChatMessage(response, 'bot');
-    }, 1000 + Math.random() * 1000); // Random delay for realism
-}
-
-function handleQuickAction(e) {
-    const message = e.target.dataset.message;
-    chatInput.value = message;
-    sendChatMessage();
-}
-
-function addChatMessage(message, sender) {
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `chat-message ${sender}-message`;
-    
-    const avatar = sender === 'user' ? '👤' : '🤖';
-    
-    // Convert markdown-style bold (**text**) to HTML bold tags
-    const formattedMessage = message.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-    
-    messageDiv.innerHTML = `
-        <div class="message-avatar">${avatar}</div>
-        <div class="message-content">
-            <p>${formattedMessage}</p>
-        </div>
-    `;
-
-    chatMessages.appendChild(messageDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
-function showTypingIndicator() {
-    const typingDiv = document.createElement('div');
-    typingDiv.className = 'chat-message bot-message typing-indicator';
-    typingDiv.id = 'typingIndicator';
-    
-    typingDiv.innerHTML = `
-        <div class="message-avatar">🤖</div>
-        <div class="message-content">
-            <div class="typing-dots">
-                <span></span>
-                <span></span>
-                <span></span>
+// Show additional sharing options
+function showShareOptions(event, shareText) {
+    const shareModal = document.createElement('div');
+    shareModal.className = 'modal-overlay';
+    shareModal.id = 'shareModal';
+    shareModal.innerHTML = `
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Share "${event.title}"</h3>
+                <button class="modal-close" onclick="closeShareModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 1rem; color: var(--text-light);">
+                    Event details have been copied to your clipboard! Choose how you'd like to share:
+                </p>
+                <div class="share-options">
+                    <button class="btn btn-primary" onclick="shareViaWhatsApp('${encodeURIComponent(shareText)}')">
+                        <i class="fab fa-whatsapp"></i>
+                        WhatsApp
+                    </button>
+                    <button class="btn btn-primary" onclick="shareViaEmail('${encodeURIComponent(event.title)}', '${encodeURIComponent(shareText)}')">
+                        <i class="fas fa-envelope"></i>
+                        Email
+                    </button>
+                    <button class="btn btn-primary" onclick="shareViaTwitter('${encodeURIComponent(shareText)}')">
+                        <i class="fab fa-twitter"></i>
+                        Twitter
+                    </button>
+                    <button class="btn btn-secondary" onclick="copyShareLink()">
+                        <i class="fas fa-link"></i>
+                        Copy Link
+                    </button>
+                </div>
+                <div class="share-preview">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Preview:</label>
+                    <textarea readonly style="width: 100%; height: 120px; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; font-family: inherit; font-size: 0.9rem; background: var(--bg-light);">${shareText}</textarea>
+                </div>
             </div>
         </div>
     `;
+    
+    document.body.appendChild(shareModal);
+    shareModal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
 
-    chatMessages.appendChild(typingDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-
-    // Add typing animation CSS if not already added
-    if (!document.querySelector('#typingCSS')) {
-        const style = document.createElement('style');
-        style.id = 'typingCSS';
-        style.textContent = `
-            .typing-dots {
-                display: flex;
-                gap: 4px;
-                padding: 8px 0;
-            }
-            .typing-dots span {
-                width: 8px;
-                height: 8px;
-                background: var(--text-light);
-                border-radius: 50%;
-                animation: typing 1.4s infinite ease-in-out;
-            }
-            .typing-dots span:nth-child(1) { animation-delay: -0.32s; }
-            .typing-dots span:nth-child(2) { animation-delay: -0.16s; }
-            .typing-dots span:nth-child(3) { animation-delay: 0; }
-            @keyframes typing {
-                0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
-                40% { transform: scale(1); opacity: 1; }
-            }
-        `;
-        document.head.appendChild(style);
+// Close share modal
+function closeShareModal() {
+    const shareModal = document.getElementById('shareModal');
+    if (shareModal) {
+        shareModal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+        setTimeout(() => {
+            document.body.removeChild(shareModal);
+        }, 300);
     }
 }
 
-function hideTypingIndicator() {
-    const typingIndicator = document.getElementById('typingIndicator');
-    if (typingIndicator) {
-        typingIndicator.remove();
+// Share via different platforms
+function shareViaWhatsApp(text) {
+    window.open(`https://wa.me/?text=${text}`, '_blank');
+    closeShareModal();
+}
+
+function shareViaEmail(subject, body) {
+    window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
+    closeShareModal();
+}
+
+function shareViaTwitter(text) {
+    window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
+    closeShareModal();
+}
+
+function copyShareLink() {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+        showNotification('Event page link copied to clipboard! 🔗');
+        closeShareModal();
+    }).catch(() => {
+        showNotification('Unable to copy link to clipboard.');
+    });
+}
+
+// Set Reminder Function
+function setReminder(eventId) {
+    const event = eventsData.find(e => e.id === eventId);
+    if (!event) return;
+
+    const eventDate = new Date(event.date + 'T' + event.time);
+    const now = new Date();
+    
+    // Check if event is in the past
+    if (eventDate < now) {
+        showNotification('⚠️ Cannot set reminder for past events.');
+        return;
+    }
+
+    // Go directly to Google Calendar
+    addToCalendar(eventId);
+}
+
+// Show reminder options modal
+function showReminderModal(event, eventDate) {
+    const reminderModal = document.createElement('div');
+    reminderModal.className = 'modal-overlay';
+    reminderModal.id = 'reminderModal';
+    
+    const formattedDate = eventDate.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+    const formattedTime = formatTime(event.time);
+    
+    reminderModal.innerHTML = `
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Set Reminder for "${event.title}"</h3>
+                <button class="modal-close" data-action="close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="event-reminder-info">
+                    <div class="event-detail">
+                        <i class="fas fa-calendar"></i>
+                        <span>${formattedDate}</span>
+                    </div>
+                    <div class="event-detail">
+                        <i class="fas fa-clock"></i>
+                        <span>${formattedTime}</span>
+                    </div>
+                    <div class="event-detail">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>${event.venue}</span>
+                    </div>
+                </div>
+                
+                <div class="reminder-methods">
+                    <h4 style="margin: 1.5rem 0 1rem 0;">Choose how you'd like to be reminded:</h4>
+                    <div class="method-buttons">
+                        <button class="btn btn-primary" data-action="add-calendar" data-event-id="${event.id}">
+                            <i class="fas fa-calendar-plus"></i>
+                            Add to Calendar
+                        </button>
+                        <button class="btn btn-secondary" data-action="email-reminder" data-event-id="${event.id}">
+                            <i class="fas fa-envelope"></i>
+                            Email Reminder
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(reminderModal);
+    reminderModal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    
+    // Add event listeners to buttons
+    const buttons = reminderModal.querySelectorAll('button[data-action]');
+    buttons.forEach(button => {
+        button.addEventListener('click', function() {
+            const action = this.dataset.action;
+            const eventId = parseInt(this.dataset.eventId);
+            
+            if (action === 'close') {
+                closeReminderModal();
+                return;
+            }
+            
+            switch(action) {
+                case 'add-calendar':
+                    addToCalendar(eventId);
+                    break;
+                case 'email-reminder':
+                    scheduleEmailReminder(eventId);
+                    break;
+            }
+        });
+    });
+    
+    // Add event listener for clicking outside the modal
+    reminderModal.addEventListener('click', function(e) {
+        if (e.target === reminderModal) {
+            closeReminderModal();
+        }
+    });
+}
+
+// Close reminder modal
+function closeReminderModal() {
+    const reminderModal = document.getElementById('reminderModal');
+    if (reminderModal) {
+        reminderModal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+        setTimeout(() => {
+            document.body.removeChild(reminderModal);
+        }, 300);
     }
 }
 
-// Generate bot responses based on user message
-function generateBotResponse(message) {
-    const lowerMessage = message.toLowerCase();
+// Add event to calendar
+function addToCalendar(eventId) {
+    const event = eventsData.find(e => e.id === eventId);
+    if (!event) return;
 
-    // Campus navigation help
-    if (lowerMessage.includes('campus map') || lowerMessage.includes('navigation') || lowerMessage.includes('directions')) {
-        return "🗺️ **Campus Navigation Available!**\n\nI can provide step-by-step directions to these locations:\n\n🏫 **Academic Buildings:**\n• LR-W5 (Lecture Room West 5)\n• E61H (Engineering Building)\n\n🎯 **Activity Centers:**\n• Agora (Main Hub)\n• Sports Complex\n• Swimming Complex\n\n🎪 **Event Venues:**\n• South Agora Hall 1-4\n• North Agora Hall\n\n💼 **Services:**\n• Career Centre\n\nJust tell me where you want to go! For example, say 'How do I get to LR-W5?' or 'Directions to Sports Complex'";
-    }
+    const startDate = new Date(event.date + 'T' + event.time);
+    const endDate = new Date(startDate.getTime() + (2 * 60 * 60 * 1000)); // Assume 2-hour duration
+    
+    const calendarUrl = generateCalendarUrl(event, startDate, endDate);
+    window.open(calendarUrl, '_blank');
+    
+    showNotification(`📅 Opening Google Calendar to add "${event.title}"!`);
+}
 
-    // Specific navigation requests
-    if (lowerMessage.includes('lr-w5') || lowerMessage.includes('lecture room')) {
-        return getNavigationGuide('LR-W5');
-    }
-    if (lowerMessage.includes('agora') && !lowerMessage.includes('hall')) {
-        return getNavigationGuide('Agora');
-    }
-    if (lowerMessage.includes('sports complex')) {
-        return getNavigationGuide('Sports Complex');
-    }
-    if (lowerMessage.includes('career centre') || lowerMessage.includes('career center')) {
-        return getNavigationGuide('Career Centre');
-    }
-    if (lowerMessage.includes('south agora hall')) {
-        return getNavigationGuide('South Agora Hall 1-4');
-    }
-    if (lowerMessage.includes('north agora hall')) {
-        return getNavigationGuide('North Agora Hall');
-    }
-    if (lowerMessage.includes('swimming complex')) {
-        return getNavigationGuide('Swimming Complex');
-    }
-    if (lowerMessage.includes('e61h') || lowerMessage.includes('engineering')) {
-        return getNavigationGuide('E61H');
-    }
+// Generate calendar URL (Google Calendar format)
+function generateCalendarUrl(event, startDate, endDate) {
+    const formatDate = (date) => {
+        return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    };
+    
+    const params = new URLSearchParams({
+        action: 'TEMPLATE',
+        text: event.title,
+        dates: `${formatDate(startDate)}/${formatDate(endDate)}`,
+        details: event.description,
+        location: event.venue,
+        trp: false
+    });
+    
+    return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
 
-    // Interest-based event recommendations
-    if (lowerMessage.includes('interest') || lowerMessage.includes('recommend') || lowerMessage.includes('suggest') || lowerMessage.includes('what events') || lowerMessage.includes('find events')) {
-        return "🎯 <b>Finding Events That Match Your Interests</b>\n\nI'd love to help you discover events you'll enjoy! Here's how to find events based on your interests:\n\n<b>📚 Academic & Learning:</b>\n• Tech Innovation Summit (July 15) - Technology trends\n• Career Development Workshop (July 18) - Professional skills\n• Coding Bootcamp (July 31) - Programming skills\n\n<b>🏃 Sports & Fitness:</b>\n• Basketball Championship (July 25) - Team sports\n• Swimming Competition (July 28) - Individual competition\n\n<b>🎨 Arts & Social:</b>\n• Summer Music Festival (July 20) - Live music\n• International Food Fair (July 22) - Cultural experience\n• Art Exhibition (July 30) - Visual arts\n\n<b>🔍 Tell me what you're interested in!</b>\nSay things like:\n• 'I like technology and coding'\n• 'I enjoy sports and fitness'\n• 'I love music and arts'\n• 'I want to improve my career skills'\n\nI'll give you personalized recommendations! 🌟";
-    }
+// Schedule email reminder (placeholder - would require backend)
+function scheduleEmailReminder(eventId) {
+    const event = eventsData.find(e => e.id === eventId);
+    if (!event) return;
 
-    // Technology/coding interests
-    if (lowerMessage.includes('technology') || lowerMessage.includes('tech') || lowerMessage.includes('coding') || lowerMessage.includes('programming') || lowerMessage.includes('computer')) {
-        return "💻 <b>Perfect! Here are tech events for you:</b>\n\n<b>🚀 Tech Innovation Summit</b>\n📅 July 15, 2:00 PM at LR-W5\n🎯 Industry leaders discussing cutting-edge technology trends\n👥 195/200 spots taken - Register soon!\n\n<b>💻 Coding Bootcamp</b>\n📅 July 31, 9:00 AM at E61H\n🎯 Learn coding basics and advanced techniques\n👥 28/30 spots available - Almost full!\n\n<b>💡 Why you'll love these:</b>\n• Network with tech professionals\n• Learn latest industry trends\n• Hands-on coding experience\n• Free workshops and materials\n\n<b>🎯 Pro tip:</b> The Coding Bootcamp is beginner-friendly but also has advanced content - perfect for any skill level!\n\nReady to join the tech community? Click 'Join Now' on these events! 🔥";
-    }
+    // Close the reminder modal first
+    closeReminderModal();
+    
+    // Show email options modal
+    showEmailReminderModal(event);
+}
 
-    // Sports/fitness interests
-    if (lowerMessage.includes('sports') || lowerMessage.includes('fitness') || lowerMessage.includes('exercise') || lowerMessage.includes('basketball') || lowerMessage.includes('swimming') || lowerMessage.includes('athletic')) {
-        return "🏃 <b>Great choice! Here are sports events for you:</b>\n\n<b>🏀 Basketball Championship</b>\n📅 July 25, 7:30 PM at Sports Complex\n🎯 Cheer for our university team in the finals!\n👥 405/600 spots - Free snacks and drinks included!\n\n<b>🏊 Swimming Competition</b>\n📅 July 28, 4:00 PM at Swimming Complex\n🎯 Open to all skill levels - medals for winners!\n👥 80/120 spots available\n\n<b>🎉 Why you'll love these:</b>\n• High-energy atmosphere\n• Support your university teams\n• Meet fellow sports enthusiasts\n• Free refreshments at basketball\n• Prizes and medals at swimming\n\n<b>🏆 Bonus:</b> Even if you're not competing in swimming, it's exciting to watch and cheer!\n\nGet your game face on and register now! 💪";
-    }
+// Show email reminder options modal
+function showEmailReminderModal(event) {
+    const eventDate = new Date(event.date);
+    const formattedDate = eventDate.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+    const formattedTime = formatTime(event.time);
+    
+    const emailBody = `Event Reminder: ${event.title}
 
-    // Arts/music/creative interests
-    if (lowerMessage.includes('music') || lowerMessage.includes('art') || lowerMessage.includes('creative') || lowerMessage.includes('culture') || lowerMessage.includes('artist') || lowerMessage.includes('festival')) {
-        return "🎨 <b>Wonderful! Here are creative events for you:</b>\n\n<b>🎵 Summer Music Festival</b>\n📅 July 20, 6:00 PM at Agora (Outside W1)\n🎯 Outdoor concert with local bands and student performers\n👥 350/500 spots - Bring your friends!\n\n<b>🎨 Art Exhibition</b>\n📅 July 30, 10:00 AM at South Agora Hall 3-4\n🎯 Stunning artworks from students and local artists\n👥 FULLY BOOKED - But worth checking for cancellations!\n\n<b>🌍 International Food Fair</b>\n📅 July 22, 12:00 PM at South Agora Hall 1\n🎯 Cultural experience with cuisines from around the world\n👥 200/300 spots available\n\n<b>✨ Why you'll love these:</b>\n• Discover local talent\n• Immerse in different cultures\n• Great photo opportunities\n• Meet creative community\n• Outdoor festival vibes\n\n<b>🎭 Perfect combination:</b> Music + Food + Art = Amazing cultural experience!\n\nLet your creative side shine! 🌟";
-    }
+Date: ${formattedDate}
+Time: ${formattedTime}
+Venue: ${event.venue}
 
-    // Career/professional interests
-    if (lowerMessage.includes('career') || lowerMessage.includes('job') || lowerMessage.includes('professional') || lowerMessage.includes('resume') || lowerMessage.includes('interview') || lowerMessage.includes('networking') || lowerMessage.includes('improve my career skills')) {
-        return "💼 <b>Excellent! Here are career-focused events for you:</b>\n\n<b>💼 Career Development Workshop</b>\n📅 July 18, 10:00 AM at Career Center\n🎯 Essential skills: interviews, resumes, networking\n👥 99/100 spots - ALMOST FULL! Register immediately!\n\n<b>🚀 Tech Innovation Summit</b>\n📅 July 15, 2:00 PM at LR-W5\n🎯 Network with industry leaders and explore opportunities\n👥 195/200 spots - Great for tech careers\n\n<b>🎯 What you'll gain:</b>\n• Professional resume writing tips\n• Interview techniques that work\n• Networking strategies\n• Industry insights from professionals\n• Direct contact with potential employers\n• Confidence in job applications\n\n<b>💡 Career Boost Strategy:</b>\n1. Attend Career Workshop first (July 18)\n2. Apply new skills at Tech Summit (July 15)\n3. Network with industry professionals\n4. Follow up with new connections\n\n<b>⚠️ URGENT:</b> Career Workshop is 99/100 full - register NOW!\n\nYour future career starts here! 🚀";
-    }
+Description: ${event.description}
 
-    // Social/networking interests
-    if (lowerMessage.includes('social') || lowerMessage.includes('friends') || lowerMessage.includes('meet people') || lowerMessage.includes('networking') || lowerMessage.includes('community')) {
-        return "🤝 <b>Perfect! Here are great social events for you:</b>\n\n<b>🌍 International Food Fair</b>\n📅 July 22, 12:00 PM at South Agora Hall 1\n🎯 Meet international students, taste amazing food\n👥 200/300 spots - Social and delicious!\n\n<b>🎵 Summer Music Festival</b>\n📅 July 20, 6:00 PM at Agora (Outside W1)\n🎯 Outdoor concert - bring friends or make new ones!\n👥 350/500 spots - Perfect group activity\n\n<b>🏀 Basketball Championship</b>\n📅 July 25, 7:30 PM at Sports Complex\n🎯 Cheer together - instant bonding experience!\n👥 405/600 spots - High-energy social event\n\n<b>🎉 Why these are perfect for socializing:</b>\n• Relaxed, fun atmospheres\n• Natural conversation starters\n• Group activities and shared experiences\n• Mix of students from different programs\n• Food and entertainment included\n\n<b>💡 Social Success Tips:</b>\n• Arrive early to mingle\n• Join group activities\n• Ask others about their favorite parts\n• Exchange contact info with new friends\n\nReady to expand your social circle? 🌟";
-    }
+Don't forget to attend this amazing event!`;
+    
+    const emailSubject = `Reminder: ${event.title}`;
+    
+    const emailModal = document.createElement('div');
+    emailModal.className = 'modal-overlay';
+    emailModal.id = 'emailModal';
+    emailModal.innerHTML = `
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Email Reminder for "${event.title}"</h3>
+                <button class="modal-close" data-action="close-email">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 1rem; color: var(--text-light);">
+                    Choose how you'd like to create your email reminder:
+                </p>
+                
+                <div class="email-options" style="margin-bottom: 1.5rem;">
+                    <button class="btn btn-primary" data-action="open-email" data-subject="${encodeURIComponent(emailSubject)}" data-body="${encodeURIComponent(emailBody)}">
+                        <i class="fas fa-envelope"></i>
+                        Open in Default Email App
+                    </button>
+                    <button class="btn btn-secondary" data-action="copy-email" data-subject="${encodeURIComponent(emailSubject)}" data-body="${encodeURIComponent(emailBody)}">
+                        <i class="fas fa-copy"></i>
+                        Copy Email Content
+                    </button>
+                </div>
+                
+                <div class="email-preview">
+                    <h4 style="margin-bottom: 0.5rem; color: var(--primary-color);">Email Preview:</h4>
+                    <div style="background: var(--bg-light); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Subject:</strong> ${emailSubject}
+                        </div>
+                        <div>
+                            <strong>Body:</strong>
+                            <pre style="white-space: pre-wrap; font-family: inherit; margin: 0.5rem 0 0 0; font-size: 0.9rem;">${emailBody}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(emailModal);
+    emailModal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    
+    // Add event listeners to buttons
+    const emailButtons = emailModal.querySelectorAll('button[data-action]');
+    emailButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const action = this.dataset.action;
+            
+            if (action === 'close-email') {
+                closeEmailModal();
+                return;
+            }
+            
+            const subject = this.dataset.subject;
+            const body = this.dataset.body;
+            
+            switch(action) {
+                case 'open-email':
+                    openDefaultEmailClient(subject, body);
+                    break;
+                case 'copy-email':
+                    copyEmailContent(subject, body);
+                    break;
+            }
+        });
+    });
+    
+    // Add event listener for clicking outside the modal
+    emailModal.addEventListener('click', function(e) {
+        if (e.target === emailModal) {
+            closeEmailModal();
+        }
+    });
+}
 
-    // Withdrawal/cancellation queries
-    if (lowerMessage.includes('withdraw') || lowerMessage.includes('cancel') || lowerMessage.includes('unregister') || lowerMessage.includes('remove application')) {
-        return "❌ **Event Withdrawal & Cancellation**\n\nYes, you can withdraw from events you've registered for!\n\n**📱 How to withdraw:**\n\n**Step 1:** Click 'View My Applications' button (top right)\n**Step 2:** Find the event you want to withdraw from\n**Step 3:** Click the red 'Delete' button on that application\n**Step 4:** Confirm your withdrawal\n\n✅ **What happens when you withdraw:**\n• Your spot becomes available for other students\n• You'll receive a confirmation notification\n• The event attendee count will be updated\n• You can re-register later if spots are still available\n\n⏰ **Withdrawal Policy:**\n• No penalty for withdrawing\n• Withdraw anytime before the event\n• Immediate effect - your spot opens up right away\n\n💡 **Tip:** Consider withdrawing early if you can't attend, so others can join!";
+// Close email modal
+function closeEmailModal() {
+    const emailModal = document.getElementById('emailModal');
+    if (emailModal) {
+        emailModal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+        setTimeout(() => {
+            document.body.removeChild(emailModal);
+        }, 300);
     }
+}
 
-    // Payment/cost queries
-    if (lowerMessage.includes('cost') || lowerMessage.includes('price') || lowerMessage.includes('pay') || lowerMessage.includes('fee') || lowerMessage.includes('money')) {
-        return "💰 **Event Costs & Payment**\n\n**Great news! All campus events are completely FREE! 🎉**\n\n✅ **What's included at no cost:**\n• Event participation\n• Registration processing\n• Refreshments (when provided)\n• Materials and resources\n• Certificates (for workshops)\n\n🎓 **Why are events free?**\n• Funded by student activity fees\n• University commitment to student engagement\n• Community building initiative\n• Equal access for all students\n\n📝 **No hidden costs:**\n• No registration fees\n• No processing charges\n• No cancellation penalties\n• No material costs\n\nJust register and enjoy! 🌟";
+// Open default email client
+function openDefaultEmailClient(subject, body) {
+    try {
+        const decodedSubject = decodeURIComponent(subject);
+        const decodedBody = decodeURIComponent(body);
+        
+        console.log('Attempting to open email client...');
+        console.log('Subject:', decodedSubject);
+        console.log('Body length:', decodedBody.length);
+        
+        // Show options modal for email clients
+        showEmailClientOptions(decodedSubject, decodedBody);
+        
+    } catch (error) {
+        console.error('Failed to prepare email:', error);
+        copyEmailContent(subject, body);
     }
+}
 
-    // Waitlist queries
-    if (lowerMessage.includes('waitlist') || lowerMessage.includes('wait list') || lowerMessage.includes('full') || lowerMessage.includes('sold out')) {
-        return "📋 **Event Waitlist & Full Events**\n\n**When events are full:**\n\n🔄 **Current System:**\n• Events show 'Fully Booked' when at capacity\n• Registration buttons become disabled\n• Check back regularly for cancellations\n\n💡 **Pro Tips for Full Events:**\n\n**1. Check Back Frequently**\n   • Students sometimes withdraw\n   • Spots open up regularly\n   • Refresh the page to see updates\n\n**2. Contact Event Organizers**\n   • Some events may add extra capacity\n   • Special accommodations possible\n\n**3. Similar Events**\n   • Look for related events\n   • Many topics covered multiple times\n\n🎯 **Best Strategy:**\nRegister early when events are announced - popular events fill up within hours!\n\n📧 **Future Feature:** We're working on an automatic waitlist system!";
+// Show email client options
+function showEmailClientOptions(subject, body) {
+    // Close the current email modal first
+    closeEmailModal();
+    
+    const optionsModal = document.createElement('div');
+    optionsModal.className = 'modal-overlay';
+    optionsModal.id = 'emailOptionsModal';
+    optionsModal.innerHTML = `
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Choose Your Email App</h3>
+                <button class="modal-close" data-action="close-options">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 1rem; color: var(--text-light);">
+                    Select how you'd like to create your email reminder:
+                </p>
+                
+                <div class="email-client-options" style="display: grid; gap: 0.75rem; margin-bottom: 1.5rem;">
+                    <button class="btn btn-primary" data-action="outlook-desktop" data-subject="${encodeURIComponent(subject)}" data-body="${encodeURIComponent(body)}">
+                        <i class="fas fa-envelope"></i>
+                        Outlook Desktop App
+                    </button>
+                    <button class="btn btn-primary" data-action="outlook-web" data-subject="${encodeURIComponent(subject)}" data-body="${encodeURIComponent(body)}">
+                        <i class="fas fa-globe"></i>
+                        Outlook Web (outlook.com)
+                    </button>
+                    <button class="btn btn-primary" data-action="gmail" data-subject="${encodeURIComponent(subject)}" data-body="${encodeURIComponent(body)}">
+                        <i class="fab fa-google"></i>
+                        Gmail
+                    </button>
+                    <button class="btn btn-secondary" data-action="generic-mailto" data-subject="${encodeURIComponent(subject)}" data-body="${encodeURIComponent(body)}">
+                        <i class="fas fa-envelope-open"></i>
+                        Default Email App
+                    </button>
+                    <button class="btn btn-outline" data-action="copy-direct" data-subject="${encodeURIComponent(subject)}" data-body="${encodeURIComponent(body)}">
+                        <i class="fas fa-copy"></i>
+                        Copy to Clipboard
+                    </button>
+                </div>
+                
+                <div class="email-preview" style="background: var(--bg-light); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); font-size: 0.9rem;">
+                    <div style="margin-bottom: 0.5rem;"><strong>Subject:</strong> ${subject}</div>
+                    <div><strong>Body:</strong></div>
+                    <pre style="white-space: pre-wrap; font-family: inherit; margin: 0.5rem 0 0 0; color: var(--text-secondary);">${body}</pre>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(optionsModal);
+    optionsModal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    
+    // Add event listeners to all buttons
+    const optionButtons = optionsModal.querySelectorAll('button[data-action]');
+    optionButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const action = this.dataset.action;
+            const subject = this.dataset.subject;
+            const body = this.dataset.body;
+            
+            console.log('Email option clicked:', action);
+            
+            switch(action) {
+                case 'close-options':
+                    closeEmailOptionsModal();
+                    break;
+                case 'outlook-desktop':
+                    openOutlookDesktop(subject, body);
+                    break;
+                case 'outlook-web':
+                    openOutlookWeb(subject, body);
+                    break;
+                case 'gmail':
+                    openGmail(subject, body);
+                    break;
+                case 'generic-mailto':
+                    tryGenericMailto(subject, body);
+                    break;
+                case 'copy-direct':
+                    copyEmailContentDirect(subject, body);
+                    break;
+                default:
+                    console.log('Unknown action:', action);
+            }
+        });
+    });
+    
+    // Add event listener for clicking outside the modal
+    optionsModal.addEventListener('click', function(e) {
+        if (e.target === optionsModal) {
+            closeEmailOptionsModal();
+        }
+    });
+}
+
+// Close email options modal
+function closeEmailOptionsModal() {
+    const optionsModal = document.getElementById('emailOptionsModal');
+    if (optionsModal) {
+        optionsModal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+        setTimeout(() => {
+            document.body.removeChild(optionsModal);
+        }, 300);
     }
+}
 
-    // Location/venue queries
-    if (lowerMessage.includes('where') || lowerMessage.includes('location') || lowerMessage.includes('venue') || lowerMessage.includes('address')) {
-        return "📍 **Event Locations & Venues**\n\n**All events are held on campus at these venues:**\n\n🏫 **Academic Buildings:**\n• **LR-W5** - Lecture Room West 5 (Main Academic Block)\n• **E61H** - Engineering Building (Tech Hub)\n• **Career Centre** - Student Services Building\n\n🎯 **Activity Centers:**\n• **Agora (Outside W1)** - Main campus courtyard\n• **Sports Complex** - Athletic facilities\n• **Swimming Complex** - Aquatic center\n\n🎪 **Event Halls:**\n• **South Agora Hall 1-4** - Multi-purpose event spaces\n• **North Agora Hall** - Large assembly venue\n\n🗺️ **Need directions?**\nClick the 'Campus Map' button or ask me 'How do I get to [venue name]' for step-by-step walking directions!\n\n📱 **Each event card shows:**\n• Exact venue name\n• Date and time\n• Building location";
+// Open Outlook Desktop App
+function openOutlookDesktop(subject, body) {
+    try {
+        const decodedSubject = decodeURIComponent(subject);
+        const decodedBody = decodeURIComponent(body);
+        
+        // Try Outlook-specific protocol first
+        const outlookUrl = `ms-outlook://compose?subject=${encodeURIComponent(decodedSubject)}&body=${encodeURIComponent(decodedBody)}`;
+        
+        console.log('Trying Outlook protocol:', outlookUrl);
+        
+        // Create a link and try to open it
+        const link = document.createElement('a');
+        link.href = outlookUrl;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showNotification('📧 Opening Outlook...');
+        closeEmailOptionsModal();
+        
+        // Fallback after 3 seconds if Outlook doesn't open
+        setTimeout(() => {
+            const fallbackConfirm = confirm(
+                'If Outlook didn\'t open, would you like to try the generic mailto link instead?'
+            );
+            if (fallbackConfirm) {
+                tryGenericMailto(subject, body);
+            }
+        }, 3000);
+        
+    } catch (error) {
+        console.error('Outlook desktop failed:', error);
+        tryGenericMailto(subject, body);
     }
+}
 
-    // Requirements/eligibility queries
-    if (lowerMessage.includes('requirement') || lowerMessage.includes('eligible') || lowerMessage.includes('who can') || lowerMessage.includes('prerequisite')) {
-        return "✅ **Event Requirements & Eligibility**\n\n**Good news - Most events are open to everyone! 🎓**\n\n**👥 Who can attend:**\n• All enrolled students\n• Faculty and staff\n• Some events open to guests\n\n**📋 General Requirements:**\n• Valid student ID (for verification)\n• Email address (for confirmation)\n• On-time arrival recommended\n\n**📚 Special Requirements (if any):**\n• Academic workshops: No prerequisites\n• Sports events: No skill level required\n• Career workshops: All majors welcome\n• Social events: Just bring enthusiasm!\n\n**🎯 Workshop-Specific:**\n• Coding Bootcamp: Beginner-friendly\n• Career Development: All years welcome\n• Swimming Competition: All skill levels\n\n**❓ Event-specific requirements:**\nCheck individual event descriptions for any special notes or recommendations.\n\n💡 **When in doubt, just register!** Most events are designed to be inclusive and welcoming to everyone.";
+// Open Outlook Web
+function openOutlookWeb(subject, body) {
+    try {
+        const decodedSubject = decodeURIComponent(subject);
+        const decodedBody = decodeURIComponent(body);
+        
+        const outlookWebUrl = `https://outlook.office.com/mail/deeplink/compose?subject=${encodeURIComponent(decodedSubject)}&body=${encodeURIComponent(decodedBody)}`;
+        
+        console.log('Opening Outlook Web:', outlookWebUrl);
+        
+        window.open(outlookWebUrl, '_blank');
+        showNotification('📧 Opening Outlook Web...');
+        closeEmailOptionsModal();
+        
+    } catch (error) {
+        console.error('Outlook web failed:', error);
+        copyEmailContentDirect(subject, body);
     }
+}
 
-    // Contact/support queries
-    if (lowerMessage.includes('contact') || lowerMessage.includes('support') || lowerMessage.includes('help desk') || lowerMessage.includes('organizer')) {
-        return "📞 **Contact & Support**\n\n**Need additional help? Here are your options:**\n\n🤖 **First - Try me!**\n• I can answer most questions about events\n• Available 24/7 through this chat\n• Use the quick action buttons for common topics\n\n📧 **Event Organizers:**\n• Contact info provided in event confirmations\n• Specific questions about event content\n• Special accommodation requests\n\n🏫 **Student Services:**\n• **Location:** Career Centre building\n• **Hours:** Mon-Fri 9:00 AM - 5:00 PM\n• **For:** Registration issues, technical problems\n\n💻 **Technical Support:**\n• Website issues or bugs\n• Registration form problems\n• Account-related questions\n\n🆘 **Emergency Contact:**\n• Day of event: Contact venue directly\n• After hours: Campus security\n\n💡 **Quick Help:**\nMost issues can be resolved by:\n• Refreshing the page\n• Checking your email for confirmations\n• Trying a different browser";
+// Open Gmail
+function openGmail(subject, body) {
+    try {
+        const decodedSubject = decodeURIComponent(subject);
+        const decodedBody = decodeURIComponent(body);
+        
+        const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(decodedSubject)}&body=${encodeURIComponent(decodedBody)}`;
+        
+        console.log('Opening Gmail:', gmailUrl);
+        
+        window.open(gmailUrl, '_blank');
+        showNotification('📧 Opening Gmail...');
+        closeEmailOptionsModal();
+        
+    } catch (error) {
+        console.error('Gmail failed:', error);
+        copyEmailContentDirect(subject, body);
     }
+}
 
-    // What to bring/preparation queries
-    if (lowerMessage.includes('bring') || lowerMessage.includes('prepare') || lowerMessage.includes('what do i need') || lowerMessage.includes('materials')) {
-        return "🎒 **What to Bring & Event Preparation**\n\n**📝 General Items for All Events:**\n• Student ID card (for check-in)\n• Water bottle (stay hydrated!)\n• Notebook and pen (for workshops)\n• Comfortable clothing\n\n**🎯 Event-Specific Preparations:**\n\n**🏀 Sports Events:**\n• Athletic wear and sneakers\n• Towel (for swimming events)\n• Team spirit and enthusiasm!\n\n**💼 Career Workshops:**\n• Resume copies (if you have one)\n• Questions about your field\n• Professional attire (recommended)\n\n**💻 Tech Workshops:**\n• Laptop (if you have one)\n• Charger\n• Note-taking materials\n\n**🎵 Social Events:**\n• Friends (more fun together!)\n• Positive attitude\n• Camera for memories\n\n**🍕 Food Events:**\n• Appetite and open mind\n• Dietary restrictions noted in registration\n\n✅ **Don't worry if you forget something!**\nMost events provide necessary materials and equipment.\n\n💡 **Check your confirmation email** for specific event requirements!";
+// Try generic mailto
+function tryGenericMailto(subject, body) {
+    try {
+        const decodedSubject = decodeURIComponent(subject);
+        const decodedBody = decodeURIComponent(body);
+        
+        // Simple mailto with just subject (more reliable)
+        const mailtoUrl = `mailto:?subject=${encodeURIComponent(decodedSubject)}`;
+        
+        console.log('Trying generic mailto:', mailtoUrl);
+        
+        window.location.href = mailtoUrl;
+        showNotification('📧 Opening default email app...');
+        closeEmailOptionsModal();
+        
+        // Offer to copy body content
+        setTimeout(() => {
+            const copyBodyConfirm = confirm(
+                `Your email app should have opened with the subject line.\n\n` +
+                `Would you like to copy the email body to paste manually?\n\n` +
+                `Body: ${decodedBody.substring(0, 100)}...`
+            );
+            if (copyBodyConfirm) {
+                navigator.clipboard.writeText(decodedBody).then(() => {
+                    showNotification('📋 Email body copied to clipboard!');
+                }).catch(() => {
+                    alert(`Email body:\n\n${decodedBody}`);
+                });
+            }
+        }, 2000);
+        
+    } catch (error) {
+        console.error('Generic mailto failed:', error);
+        copyEmailContentDirect(subject, body);
     }
+}
 
-    // Help and general queries
-    if (lowerMessage.includes('help') || lowerMessage.includes('what can you do')) {
-        return "👋 **Hi there! I'm your Campus Event Assistant**\n\nI can help you with:\n\n🎯 **Quick Actions:**\n• Get upcoming event info\n• Learn how to register for events\n• Set up event reminders\n• Find your way around campus\n\n🗺️ **Campus Navigation:**\n• Directions to any campus location\n• Step-by-step walking guides\n• Building and venue information\n\n📱 **Event Management:**\n• Registration assistance\n• Reminder setup\n• Event details and schedules\n\nTry clicking one of the quick action buttons below, or just ask me anything! 😊";
+// Copy email content directly
+function copyEmailContentDirect(subject, body) {
+    try {
+        const decodedSubject = decodeURIComponent(subject);
+        const decodedBody = decodeURIComponent(body);
+        const emailContent = `Subject: ${decodedSubject}\n\n${decodedBody}`;
+        
+        navigator.clipboard.writeText(emailContent).then(() => {
+            showNotification('📋 Email content copied to clipboard! You can paste it into any email app.');
+            closeEmailOptionsModal();
+        }).catch(() => {
+            alert(`Email reminder content:\n\n${emailContent}`);
+            closeEmailOptionsModal();
+        });
+    } catch (error) {
+        console.error('Failed to copy email content:', error);
+        const emailContent = `Subject: ${decodeURIComponent(subject)}\n\n${decodeURIComponent(body)}`;
+        alert(`Email reminder content:\n\n${emailContent}`);
+        closeEmailOptionsModal();
     }
+}
 
-    // Greeting responses
-    if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('hey')) {
-        return "Hello! 👋 Welcome to the Campus Event Promoter! \n\nI'm here to help you discover amazing events, register for activities, and navigate around campus. What would you like to know about? \n\nTry one of the quick actions below or just ask me anything! 😊";
+// Show notification function
+function showNotification(message) {
+    const notification = document.getElementById('notification');
+    const notificationText = notification.querySelector('.notification-text');
+    
+    if (notification && notificationText) {
+        notificationText.textContent = message;
+        notification.classList.add('show');
+        
+        // Hide after 3 seconds
+        setTimeout(() => {
+            notification.classList.remove('show');
+        }, 3000);
+    } else {
+        // Fallback: use browser alert if notification element doesn't exist
+        alert(message);
     }
-
-    // Default response for unrecognized queries
-    return "I'm here to help with campus events and navigation! 🤖\n\nTry asking me about:\n• Upcoming events\n• How to register\n• Event reminders\n• Campus directions\n\nOr use the quick action buttons below for instant help! ⚡";
 }

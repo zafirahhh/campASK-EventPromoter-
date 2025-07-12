@@ -13,6 +13,8 @@
     --text-dark: #2c2c2c;
     --text-light: #666666;
     --white: #ffffff;
+    --border-color: #e0e0e0;
+    --bg-light: #f8f9fa;
     --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.15);
     --border-radius: 12px;
@@ -1133,5 +1135,181 @@ body {
     
     .chat-bubble-icon {
         font-size: 1.6rem;
+    }
+}
+
+/* Share Modal Styles */
+.share-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.share-options .btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    min-height: 80px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.share-options .btn i {
+    font-size: 1.5rem;
+}
+
+.share-preview {
+    margin-top: 1rem;
+}
+
+.share-preview label {
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+/* Reminder Modal Styles */
+.event-reminder-info {
+    background: var(--background-color);
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 1.5rem;
+}
+
+.event-reminder-info .event-detail {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-dark);
+}
+
+.event-reminder-info .event-detail:last-child {
+    margin-bottom: 0;
+}
+
+.event-reminder-info .event-detail i {
+    color: var(--primary-color);
+    width: 20px;
+    text-align: center;
+}
+
+.reminder-options h4,
+.reminder-methods h4 {
+    color: var(--primary-color);
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.method-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.method-buttons .btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    min-height: 80px;
+    text-align: center;
+}
+
+.method-buttons .btn i {
+    font-size: 1.3rem;
+}
+
+/* Responsive adjustments for modals */
+@media (max-width: 768px) {
+    .share-options {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .method-buttons {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .modal {
+        margin: 1rem;
+        max-height: calc(100vh - 2rem);
+        overflow-y: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .share-options {
+        grid-template-columns: 1fr;
+    }
+    
+    .share-options .btn,
+    .method-buttons .btn {
+        min-height: 70px;
+        padding: 1rem;
+    }
+    
+    .share-options .btn i,
+    .method-buttons .btn i {
+        font-size: 1.2rem;
+    }
+}
+
+/* Email Modal Styles */
+.email-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.email-options .btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    min-height: 80px;
+    text-align: center;
+}
+
+.email-options .btn i {
+    font-size: 1.3rem;
+}
+
+.email-preview {
+    margin-top: 1rem;
+}
+
+.email-preview h4 {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.email-preview pre {
+    background: var(--white);
+    padding: 0.75rem;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    color: var(--text-dark);
+    line-height: 1.4;
+}
+
+/* Responsive adjustments for email modal */
+@media (max-width: 480px) {
+    .email-options {
+        grid-template-columns: 1fr;
+    }
+    
+    .email-options .btn {
+        min-height: 70px;
+        padding: 0.75rem;
+    }
+    
+    .email-preview pre {
+        font-size: 0.85rem;
+        padding: 0.5rem;
     }
 }
