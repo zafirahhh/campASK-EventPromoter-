@@ -7,7 +7,7 @@ let eventsData = [
         category: "academic",
         date: "2025-07-15",
         time: "14:00",
-        venue: "Tech Hub Auditorium",
+        venue: "LR-W5",
         poster: "🚀",
         attendees: 195,
         maxAttendees: 200
@@ -19,7 +19,7 @@ let eventsData = [
         category: "social",
         date: "2025-07-20",
         time: "18:00",
-        venue: "Campus Green",
+        venue: "Agora (Outside W1)",
         poster: "🎵",
         attendees: 350,
         maxAttendees: 500
@@ -43,7 +43,7 @@ let eventsData = [
         category: "academic",
         date: "2025-07-18",
         time: "10:00",
-        venue: "Business Building Room 201",
+        venue: "Career Center",
         poster: "💼",
         attendees: 99,
         maxAttendees: 100
@@ -55,7 +55,7 @@ let eventsData = [
         category: "social",
         date: "2025-07-22",
         time: "12:00",
-        venue: "Student Union Plaza",
+        venue: "South Agora Hall 1",
         poster: "🌍",
         attendees: 200,
         maxAttendees: 300
@@ -67,7 +67,7 @@ let eventsData = [
         category: "sports",
         date: "2025-07-28",
         time: "16:00",
-        venue: "Aquatic Center",
+        venue: "Swimming Complex",
         poster: "🏊",
         attendees: 80,
         maxAttendees: 120
@@ -79,7 +79,7 @@ let eventsData = [
         category: "social",
         date: "2025-07-30",
         time: "10:00",
-        venue: "Art Gallery",
+        venue: "South Agora Hall 3 and 4",
         poster: "🎨",
         attendees: 50,
         maxAttendees: 50 // Fully booked
@@ -91,7 +91,7 @@ let eventsData = [
         category: "academic",
         date: "2025-07-31",
         time: "09:00",
-        venue: "Computer Lab",
+        venue: "E61H",
         poster: "💻",
         attendees: 28,
         maxAttendees: 30 // 2 spots left
