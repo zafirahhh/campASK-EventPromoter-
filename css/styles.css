@@ -817,11 +817,15 @@ body {
 .bot-message .message-avatar {
     background: #1e3a8a;
     color: var(--white);
+    font-size: 1.2rem;
+    border: 2px solid #1e3a8a;
 }
 
 .user-message .message-avatar {
     background: var(--primary-color);
     color: var(--white);
+    font-size: 1.1rem;
+    border: 2px solid var(--primary-color);
 }
 
 .message-content {
@@ -832,12 +836,24 @@ body {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     line-height: 1.5;
     border: 1px solid #e5e7eb;
+    position: relative;
+}
+
+.bot-message .message-content {
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    border-left: 4px solid #1e3a8a;
 }
 
 .user-message .message-content {
     background: var(--primary-color);
     color: var(--white);
     border: none;
+    border-radius: 18px 18px 4px 18px;
+}
+
+.bot-message .message-content {
+    border-radius: 18px 18px 18px 4px;
 }
 
 .message-content p {
@@ -845,12 +861,24 @@ body {
     color: #374151;
 }
 
-.user-message .message-content p {
-    color: var(--white);
+.user-message .message-content p,
+.user-message .message-content {
+    color: var(--white) !important;
 }
 
 .message-content p:last-child {
     margin-bottom: 0;
+}
+
+.message-time {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    margin-top: 0.25rem;
+    text-align: left;
+}
+
+.user-message .message-time {
+    text-align: right;
 }
 
 .message-content ul {
