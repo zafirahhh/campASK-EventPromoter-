@@ -107,15 +107,6 @@ const cancelBtn = document.getElementById('cancelBtn');
 const notification = document.getElementById('notification');
 const filterBtns = document.querySelectorAll('.filter-btn');
 
-// Chat elements
-const chatBubble = document.getElementById('chatBubble');
-const chatWindow = document.getElementById('chatWindow');
-const chatClose = document.getElementById('chatClose');
-const chatInput = document.getElementById('chatInput');
-const chatSend = document.getElementById('chatSend');
-const chatMessages = document.getElementById('chatMessages');
-const quickActionBtns = document.querySelectorAll('.quick-action-btn');
-
 // Application management elements
 const viewApplicationsBtn = document.getElementById('viewApplicationsBtn');
 const backToEventsBtn = document.getElementById('backToEvents');
@@ -134,7 +125,6 @@ const editCancelBtn = document.getElementById('editCancelBtn');
 // Current state
 let currentFilter = 'all';
 let currentEventId = null;
-let isChatOpen = false;
 let currentApplicationId = null;
 let userApplications = JSON.parse(localStorage.getItem('userApplications')) || [];
 
@@ -172,9 +162,6 @@ document.addEventListener('DOMContentLoaded', function() {
     renderEvents();             // render AFTER initializing
     setupEventListeners();
     updateApplicationsBadge();
-
-    // Disable chat send initially
-    if (chatSend) chatSend.disabled = true;
 
     animateOnLoad();
     console.log('Application initialized successfully.');
@@ -236,18 +223,6 @@ function setupEventListeners() {
     editCancelBtn.addEventListener('click', closeEditModal);
     editModalOverlay.addEventListener('click', handleEditModalOverlayClick);
     editApplicationForm.addEventListener('submit', handleEditFormSubmit);
-
-    // Chat controls
-    chatBubble.addEventListener('click', toggleChat);
-    chatClose.addEventListener('click', closeChat);
-    chatSend.addEventListener('click', sendChatMessage);
-    chatInput.addEventListener('keypress', handleChatKeyPress);
-    chatInput.addEventListener('input', handleChatInput);
-
-    // Quick action buttons
-    quickActionBtns.forEach(btn => {
-        btn.addEventListener('click', handleQuickAction);
-    });
 
     // Keyboard navigation
     document.addEventListener('keydown', handleKeyDown);
@@ -756,15 +731,6 @@ function displayWarning(id, message) {
 
 // Call updateEventAvailability on page load - REMOVED to prevent conflicts
 
-// Close chat window on outside click
-document.addEventListener('click', function(event) {
-    if (!chatBubble.contains(event.target) && !chatWindow.contains(event.target)) {
-        if (isChatOpen) {
-            toggleChat();
-        }
-    }
-});
-
 // Animate elements on page load
 function animateOnLoad() {
     // Both header and hero are now visible by default
@@ -1020,215 +986,6 @@ function showNotification(message) {
     }
 }
 
-// Chat Functions
-function toggleChat() {
-    const chatWindow = document.getElementById('chatWindow');
-    const chatBubble = document.getElementById('chatBubble');
-    
-    if (!chatWindow || !chatBubble) return;
-    
-    isChatOpen = !isChatOpen;
-    
-    if (isChatOpen) {
-        chatWindow.classList.add('active');
-        chatBubble.classList.add('active');
-        
-        // Focus on chat input when opened
-        const chatInput = document.getElementById('chatInput');
-        if (chatInput) {
-            setTimeout(() => chatInput.focus(), 300);
-        }
-    } else {
-        chatWindow.classList.remove('active');
-        chatBubble.classList.remove('active');
-    }
-}
-
-function closeChat() {
-    const chatWindow = document.getElementById('chatWindow');
-    const chatBubble = document.getElementById('chatBubble');
-    
-    if (!chatWindow || !chatBubble) return;
-    
-    isChatOpen = false;
-    chatWindow.classList.remove('active');
-    chatBubble.classList.remove('active');
-}
-
-function sendChatMessage() {
-    const chatInput = document.getElementById('chatInput');
-    const chatMessages = document.getElementById('chatMessages');
-    const chatSend = document.getElementById('chatSend');
-    
-    if (!chatInput || !chatMessages || !chatSend) return;
-    
-    const message = chatInput.value.trim();
-    if (!message) return;
-    
-    // Add user message
-    addChatMessage(message, 'user');
-    
-    // Clear input and disable send button
-    chatInput.value = '';
-    chatSend.disabled = true;
-    
-    // Simulate bot response
-    setTimeout(() => {
-        addBotResponse(message);
-    }, 1000);
-}
-
-function addChatMessage(message, sender) {
-    const chatMessages = document.getElementById('chatMessages');
-    if (!chatMessages) return;
-    
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `chat-message ${sender}-message`;
-    
-    const timestamp = new Date().toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-    
-    // Create avatar
-    const avatar = document.createElement('div');
-    avatar.className = 'message-avatar';
-    avatar.innerHTML = sender === 'user' ? '👤' : '🤖';
-    
-    // Create content wrapper
-    const contentWrapper = document.createElement('div');
-    contentWrapper.style.flex = '1';
-    
-    // Create message content
-    const messageContent = document.createElement('div');
-    messageContent.className = 'message-content';
-    
-    // Handle multiline messages (preserve line breaks)
-    const formattedMessage = message.replace(/\n/g, '<br>');
-    messageContent.innerHTML = formattedMessage;
-    
-    // Create timestamp
-    const messageTime = document.createElement('div');
-    messageTime.className = 'message-time';
-    messageTime.textContent = timestamp;
-    messageTime.style.fontSize = '0.75rem';
-    messageTime.style.color = '#9ca3af';
-    messageTime.style.marginTop = '0.25rem';
-    messageTime.style.textAlign = sender === 'user' ? 'right' : 'left';
-    
-    // Assemble the message
-    contentWrapper.appendChild(messageContent);
-    contentWrapper.appendChild(messageTime);
-    messageDiv.appendChild(avatar);
-    messageDiv.appendChild(contentWrapper);
-    
-    chatMessages.appendChild(messageDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
-function addBotResponse(userMessage) {
-    const lowerMessage = userMessage.toLowerCase();
-    let response = '';
-    
-    // Handle campus location questions based on RP campus map
-    if (lowerMessage.includes('where is lr-w5') || lowerMessage.includes('where is lr w5') || lowerMessage.includes('lr-w5 location') || lowerMessage.includes('w5')) {
-        response = "📍 LR-W5 is in Building W5 (Learning Resource Center)!\n\n🗺️ **Step-by-step directions:**\n1️⃣ Enter campus via Woodlands Drive 17 main entrance\n2️⃣ Walk straight towards the central area\n3️⃣ Look for Building W5 in the academic building cluster\n4️⃣ Enter Building W5 (Learning Resource Center)\n5️⃣ Take elevator/stairs to Level 5\n6️⃣ Look for room signs to find specific room\n\n📚 It's near the Library and adjacent to W4 and W6! 🏢";
-    } else if (lowerMessage.includes('where is agora') || lowerMessage.includes('agora location')) {
-        response = "📍 The Agora areas are centrally located on campus!\n\n🗺️ Agora locations:\n• **Main Agora**: Central courtyard between W and E buildings\n• **South Agora Hall 1**: Near the southern buildings\n• **South Agora Hall 3 & 4**: In the southern campus area\n\n🚶‍♂️ From main entrance: Head straight into campus center, you'll find the open courtyard areas surrounded by the academic buildings! ☀️";
-    } else if (lowerMessage.includes('where is sports complex') || lowerMessage.includes('sports complex location')) {
-        response = "🏃‍♂️ The Sports Complex is on the western side of campus!\n\n🗺️ **Step-by-step directions:**\n1️⃣ Enter campus via Woodlands Drive 17 main entrance\n2️⃣ Turn LEFT immediately after entering\n3️⃣ Walk towards the western area of campus\n4️⃣ Look for 'SPORTS COMPLEX' building signs\n5️⃣ Look for 'THE ARCH' landmark nearby\n6️⃣ Enter the sports facilities building\n\n🏀 Includes gymnasium, courts, and fitness facilities!";
-    } else if (lowerMessage.includes('where is career center') || lowerMessage.includes('career center location')) {
-        response = "💼 The Career Center is in the Student Services area!\n\n🗺️ **Step-by-step directions:**\n1️⃣ Enter campus via Woodlands Drive 17 main entrance\n2️⃣ Head towards the SOUTH (right side) of campus\n3️⃣ Look for the 'REPUBLIC CULTURAL CENTRE' building\n4️⃣ Career Center is nearby in the same area\n5️⃣ Look for 'INFO CENTRE' and 'RETAIL SHOPS' as landmarks\n6️⃣ Enter the Student Services building\n7️⃣ Career Center is on the ground floor\n\n📈 Great for workshops and career guidance!";
-    } else if (lowerMessage.includes('where is e61h') || lowerMessage.includes('e61h location') || lowerMessage.includes('e6')) {
-        response = "💻 E61H is in Building E6!\n\n🗺️ **Step-by-step directions:**\n1️⃣ Enter campus via Woodlands Drive 17 main entrance\n2️⃣ Head towards the EAST (left side) of campus\n3️⃣ Look for the Engineering building cluster\n4️⃣ Find Building E6 (clearly marked)\n5️⃣ Enter Building E6\n6️⃣ Take elevator/stairs to Level 6\n7️⃣ Look for Room 1H (computer lab area)\n\n⌨️ Near E5, E4, E3, E2, E1 buildings in the Engineering area!";
-    } else if (lowerMessage.includes('where is swimming complex') || lowerMessage.includes('swimming complex location') || lowerMessage.includes('swimming pool')) {
-        response = "🏊‍♀️ The Swimming Complex is part of the Sports Complex!\n\n🗺️ Location:\n• **Western side** of campus\n• Within the Sports Complex building\n• Near 'THE ARCH' area\n• Includes 50m pool and training facilities\n• Changing rooms and spectator areas\n\n🚶‍♂️ From entrance: Turn left towards the sports area! 💦";
-    } else if (lowerMessage.includes('where is library') || lowerMessage.includes('library location')) {
-        response = "📚 The Library is centrally located!\n\n🗺️ Directions:\n• Central campus area\n• Near W5 and W6 buildings\n• Part of the Learning Resource Center complex\n• Multiple floors with study spaces\n• Close to the main Agora area\n\nEasy to find in the heart of campus! �";
-    } else if (lowerMessage.includes('where is w1') || lowerMessage.includes('w1 location')) {
-        response = "🏢 Building W1 is in the central campus area!\n\n🗺️ Directions:\n• Central campus area\n• Part of the main academic building cluster\n• Near the Agora courtyard\n• Adjacent to other W buildings (W2, W3, W4)\n\nLook for the W building cluster! �";
-    } else if (lowerMessage.includes('where is e1') || lowerMessage.includes('e1 location')) {
-        response = "� Building E1 is in the Engineering zone!\n\n🗺️ Directions:\n• Eastern side of campus\n• First of the Engineering buildings\n• Near the Food Court area\n• Close to E2, E3, E4, E5, E6\n\nHead to the Engineering building cluster! ⚙️";
-    } else if (lowerMessage.includes('food court') || lowerMessage.includes('where to eat') || lowerMessage.includes('dining')) {
-        response = "🍽️ Food options on campus!\n\n🗺️ Food locations:\n• **Main Food Court**: Central campus between W and E buildings\n• **South Food Court**: Southern area near student services\n• **Retail Shops**: Southern campus area\n• **Various cafes**: Throughout different buildings\n\nPlenty of dining choices across campus! 🥪☕";
-    } else if (lowerMessage.includes('parking') || lowerMessage.includes('where to park')) {
-        response = "🚗 Parking areas on campus!\n\n🗺️ Parking locations:\n• **P1**: Near Woodlands Drive 17 entrance\n• **P2**: Southern area near student services\n• **P3**: Eastern side near engineering buildings\n• **Motorcycle parking**: Various designated areas\n\nMultiple parking areas available! 🅿️";
-    } else if (lowerMessage.includes('campus map') || lowerMessage.includes('how do i find') || lowerMessage.includes('directions to')) {
-        response = "🗺️ RP Campus Navigation Help!\n\n📍 **Campus Areas:**\n• **W Buildings**: W1-W6, Library, Learning Resource Center (central)\n• **E Buildings**: E1-E6, Engineering departments (eastern side)\n• **Sports Complex**: The Arch, gymnasium, pool (western side)\n• **Student Services**: Cultural Centre, Career Center (southern area)\n\n🚪 **Main Entrance**: Woodlands Drive 17\n🚌 **Bus stops**: Woodlands North, Woodlands South\n\nJust ask me \"Where is [building/location]\"! 🧭";
-    }
-    // Handle specific quick action messages
-    else if (lowerMessage.includes('what events are happening this week')) {
-        response = "Great! You can see all upcoming events above. Use the filter buttons (Academic, Social, Sports) to find specific types of events. All events show the date, time, venue, and current attendance. Click 'Join Now' to register! 📅";
-    } else if (lowerMessage.includes('how do i register for an event')) {
-        response = "To register for an event: \n\n1️⃣ Click the 'Join Now' button on any event card\n2️⃣ Fill out your name, email, and any notes\n3️⃣ Click 'Submit Application'\n\nYou'll get a confirmation and can view your applications anytime! 📝";
-    } else if (lowerMessage.includes('campus navigation help')) {
-        response = "For campus navigation help:\n\n🗺️ Most events show the venue location\n📍 Common venues include:\n• LR-W5 (Learning Resource Center)\n• Agora (Central courtyard area)\n• Sports Complex\n• South Agora Halls\n\nIf you need specific directions, check with campus information or ask event organizers! 🧭";
-    } else if (lowerMessage.includes('set up event reminders')) {
-        response = "Setting reminders is easy! \n\n🔔 Click the 'Set Reminder' button on any event\n📅 It will open Google Calendar with all event details pre-filled\n✅ Save it to your calendar and you're all set!\n\nYou'll get notified before the event starts! ⏰";
-    } else if (lowerMessage.includes('hello') || lowerMessage.includes('hi')) {
-        response = "Hi there! 👋 I'm here to help you with campus events and directions. What would you like to know?";
-    } else if (lowerMessage.includes('show me upcoming events') || lowerMessage.includes('browse events')) {
-        response = "Great! You can see all upcoming events above. Use the filter buttons (Academic, Social, Sports) to find specific types of events. All events show the date, time, venue, and current attendance. Click 'Join Now' to register! 📅";
-    } else if (lowerMessage.includes('how do i register') || lowerMessage.includes('register for an event')) {
-        response = "To register for an event: \n\n1️⃣ Click the 'Join Now' button on any event card\n2️⃣ Fill out your name, email, and any notes\n3️⃣ Click 'Submit Application'\n\nYou'll get a confirmation and can view your applications anytime! 📝";
-    } else if (lowerMessage.includes('how do i set reminders') || lowerMessage.includes('set reminders')) {
-        response = "Setting reminders is easy! \n\n🔔 Click the 'Set Reminder' button on any event\n📅 It will open Google Calendar with all event details pre-filled\n✅ Save it to your calendar and you're all set!\n\nYou'll get notified before the event starts! ⏰";
-    } else if (lowerMessage.includes('event') || lowerMessage.includes('what')) {
-        response = "We have amazing events coming up! You can browse them above or use the filter buttons to find events by category. Need help with anything specific?";
-    } else if (lowerMessage.includes('register') || lowerMessage.includes('join')) {
-        response = "To register for an event, simply click the 'Join Now' button on any event card. Make sure to fill out all required information!";
-    } else if (lowerMessage.includes('reminder') || lowerMessage.includes('calendar')) {
-        response = "You can set reminders by clicking the 'Set Reminder' button on any event. I'll help you add it to your calendar!";
-    } else if (lowerMessage.includes('share')) {
-        response = "Want to share an event with friends? Use the 'Share' button on any event card to spread the word!";
-    } else if (lowerMessage.includes('help')) {
-        response = "I'm here to help! You can ask me about events, registration, reminders, campus directions, or anything else related to campus activities. What do you need help with?";
-    } else if (lowerMessage.includes('thanks') || lowerMessage.includes('thank you')) {
-        response = "You're welcome! Feel free to ask if you need any more help with campus events or directions. Have a great day! 😊";
-    } else {
-        response = "Thanks for your message! I can help you with information about campus events, registration, reminders, campus directions, and sharing. What would you like to know more about?";
-    }
-    
-    addChatMessage(response, 'bot');
-}
-
-function handleChatKeyPress(e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendChatMessage();
-    }
-}
-
-function handleChatInput() {
-    const chatInput = document.getElementById('chatInput');
-    const chatSend = document.getElementById('chatSend');
-    
-    if (!chatInput || !chatSend) return;
-    
-    chatSend.disabled = chatInput.value.trim() === '';
-}
-
-function handleQuickAction(e) {
-    const message = e.target.dataset.message || e.target.closest('button').dataset.message;
-    const chatInput = document.getElementById('chatInput');
-    
-    if (!chatInput || !message) return;
-    
-    // Use the message directly from the HTML
-    chatInput.value = message;
-    chatInput.focus();
-    
-    // Enable send button and automatically send the message
-    const chatSend = document.getElementById('chatSend');
-    if (chatSend) {
-        chatSend.disabled = false;
-        // Automatically send the message after a short delay
-        setTimeout(() => {
-            sendChatMessage();
-        }, 100);
-    }
-}
-
 // Handle keyboard navigation
 function handleKeyDown(e) {
     // ESC key closes modals
@@ -1243,11 +1000,6 @@ function handleKeyDown(e) {
             } else if (activeModal.id === 'shareModal') {
                 closeShareModal();
             }
-        }
-        
-        // Close chat if open
-        if (isChatOpen) {
-            closeChat();
         }
     }
 }
